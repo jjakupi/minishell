@@ -67,3 +67,44 @@ int is_valid_identifier(const char *str)
     }
     return 1;
 }
+
+// Check if a token is a valid export token.
+// Since your lexer already handles quotes, the token value is assumed to be unquoted.
+// It can be either a valid identifier or an assignment NAME=VALUE,
+// where NAME is a valid identifier.
+int is_valid_export_token(const char *str)
+{
+    if (!str)
+        return 0;
+
+    char *equal_sign = strchr(str, '=');
+    if (equal_sign) {
+        // Extract the substring before '='.
+        size_t name_len = equal_sign - str;
+        // Temporarily duplicate the identifier part.
+        char *name = strndup(str, name_len);
+        if (!name)
+            return 0;
+        int valid = is_valid_identifier(name);
+        free(name);
+        return valid;
+    } else {
+        return is_valid_identifier(str);
+    }
+}
+
+int is_numeric(const char *str)
+{
+    if (!str || !*str)
+        return 0;
+    if (*str == '+' || *str == '-')
+        str++;
+    if (!*str)
+        return 0;
+    while (*str) {
+        if (!isdigit(*str))
+            return 0;
+        str++;
+    }
+    return 1;
+}

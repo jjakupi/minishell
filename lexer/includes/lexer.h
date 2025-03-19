@@ -41,10 +41,15 @@ t_command *parse_cd(t_token *tokens);
 t_command *parse_pwd(t_token *tokens);
 t_command *parse_export(t_token *tokens);
 t_command *create_command(void);
+t_command *parse_unset(t_token *tokens);
+t_command *parse_env(t_token *tokens);
+t_command *parse_exit(t_token *tokens);
 
+int is_valid_export_token(const char *str);
 void free_command(t_command *cmd);
 void add_argument(t_command *cmd, const char *arg);
 int is_valid_identifier(const char *str);
+int is_numeric(const char *str);
 // Function Prototypes
 t_token			*tokenize(const char *input);
 t_token			*new_token(t_token_type type, const char *value);

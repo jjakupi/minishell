@@ -51,6 +51,12 @@ int main(void) {
         cmd = parse_pwd(tokens);
     else if (strcmp(tokens->value, "export") == 0)
         cmd = parse_export(tokens);
+    else if (strcmp(tokens->value, "unset") == 0)
+        cmd = parse_unset(tokens);
+    else if (strcmp(tokens->value, "env") == 0)
+        cmd = parse_env(tokens);
+    else if (strcmp(tokens->value, "exit") == 0)
+        cmd = parse_exit(tokens);
     else
         fprintf(stderr, "Unknown command: %s\n", tokens->value);
 
