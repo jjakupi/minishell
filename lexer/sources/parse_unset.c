@@ -5,14 +5,14 @@
 
 t_command *parse_unset(t_token *tokens)
 {
-    if (!tokens || strcmp(tokens->value, "unset") != 0)
+    if (!tokens || ft_strcmp(tokens->value, "unset") != 0)
     {
         fprintf(stderr, "Error: Expected unset command\n");
         return NULL;
     }
 
     t_command *command = create_command();
-    command->cmd = strdup("unset");
+    command->cmd = ft_strdup("unset");
 
     t_token *current = tokens->next; // Skip the "unset" token.
 

@@ -77,7 +77,7 @@ int is_valid_export_token(const char *str)
     if (!str)
         return 0;
 
-    char *equal_sign = strchr(str, '=');
+    char *equal_sign = ft_strchr(str, '=');
     if (equal_sign) {
         // Extract the substring before '='.
         size_t name_len = equal_sign - str;
@@ -102,7 +102,7 @@ int is_numeric(const char *str)
     if (!*str)
         return 0;
     while (*str) {
-        if (!isdigit(*str))
+        if (!ft_isdigit(*str))
             return 0;
         str++;
     }

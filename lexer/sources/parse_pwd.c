@@ -14,7 +14,7 @@ t_command *parse_pwd(t_token *tokens)
     }
 
     t_command *command = create_command();
-    command->cmd = strdup("pwd");
+    command->cmd = ft_strdup("pwd");
     // Ignore any extra tokens: free them or just skip over them.
     // Here we simply skip them.
     // For a complete solution, you might want to free them if needed.
