@@ -48,42 +48,43 @@ void	process_dollar(const char *input, int *i, t_token **tokens, char **current_
 	}
 }
 
-
-void process_quotes(const char *input, int *i, char **current_arg, t_token **tokens)
+void	process_quotes(const char *input, int *i, char **current_arg, t_token **tokens)
 {
-    char quote = input[(*i)++]; // Skip the opening quote.
-    int start = *i;
+    char quote = input[(*i)++]; // Save and skip the opening quote.
+
+    // Check if we are processing a double quote.
+    int is_double_quote = (quote == '"');
 
     // Collect characters until we hit the matching quote.
     while (input[*i] && input[*i] != quote)
-        (*i)++;
-
-    // Duplicate the quoted text.
-    char *quoted_text = strndup(input + start, *i - start);
-
-    // Append the quoted text to the current argument.
-    if (!*current_arg)
-        *current_arg = quoted_text;
-    else
     {
-        char *tmp = append_str(*current_arg, quoted_text);
-        free(quoted_text);
-        *current_arg = tmp;
+        // If inside double quotes, check for a '$' that signals an environment variable.
+        if (is_double_quote && input[*i] == '$')
+        {
+            // Flush any literal text collected so far.
+            flush_current_arg(tokens, current_arg);
+            // Process the dollar variable.
+            process_dollar(input, i, tokens, current_arg);
+            // Continue without incrementing *i here because process_dollar updates it.
+            continue;
+        }
+        else
+        {
+            *current_arg = append_char(*current_arg, input[*i]);
+            (*i)++;
+        }
     }
 
     // If a closing quote is found, skip it.
-    if (input[*i])
+    if (input[*i] == quote)
         (*i)++;
 
-    // After processing the quoted string, check the next character.
-    // If it's a delimiter (whitespace, end of input, or a special char), flush the token.
+    // After finishing, check the next character.
     if (!input[*i] || is_whitespace(input[*i]) || is_special(input[*i]))
     {
         flush_current_arg(tokens, current_arg);
     }
 }
-
-
 
 void	process_special(const char *input, int *i, t_token **tokens, char **current_arg)
 {
