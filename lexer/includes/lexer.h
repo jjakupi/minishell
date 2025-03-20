@@ -32,6 +32,11 @@ typedef struct s_command {
     int     suppress_newline; // 1 if -n is provided, else 0
     char    **args;           // Array of argument strings
     int     arg_count;        // Number of arguments
+	// New fields for redirections:
+	char    *input_file;      // For '<'
+	char    *output_file;     // For '>' or '>>'
+	int     append_mode;      // 0 for '>', 1 for '>>'
+	// You could also add a field for heredoc delimiter if needed.
 } t_command;
 
 
@@ -44,6 +49,8 @@ t_command *create_command(void);
 t_command *parse_unset(t_token *tokens);
 t_command *parse_env(t_token *tokens);
 t_command *parse_exit(t_token *tokens);
+int parse_input_redirection(t_command *cmd, t_token **current);
+int parse_output_redirection(t_command *cmd, t_token **current);
 
 int is_valid_export_token(const char *str);
 void free_command(t_command *cmd);

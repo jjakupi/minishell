@@ -11,24 +11,16 @@ t_command *parse_exit(t_token *tokens)
     }
 
     t_command *command = create_command();
+    if (!command)
+        return NULL;
     command->cmd = strdup("exit");
-
-    t_token *current = tokens->next;  // Skip the "exit" token.
-    if (current) {
-        // For now, if more than one argument, you might print an error.
-        if (current->next) {
-            fprintf(stderr, "exit: too many arguments\n");
-            free_command(command);
-            return NULL;
-        }
-        // If one argument exists, validate it as numeric.
-        if (!is_numeric(current->value)) {
-            fprintf(stderr, "exit: %s: numeric argument required\n", current->value);
-            free_command(command);
-            return NULL;
-        }
-        // If valid, add it as the argument.
-        add_argument(command, current->value);
+    if (!command->cmd) {
+        free_command(command);
+        return NULL;
     }
+
+    // Do not process any arguments after "exit"
+    // This mimics your terminal's behavior where extra tokens are ignored.
+
     return command;
 }
