@@ -19,8 +19,15 @@ t_command *parse_exit(t_token *tokens)
         return NULL;
     }
 
-    // Do not process any arguments after "exit"
-    // This mimics your terminal's behavior where extra tokens are ignored.
+    // Process tokens after "exit" and store them as arguments.
+    t_token *current = tokens->next; // Skip the "exit" token
+    while (current)
+    {
+        if (current->type == WORD) {  // Assuming WORD tokens hold the arguments
+            add_argument(command, current->value);
+        }
+        current = current->next;
+    }
 
     return command;
 }

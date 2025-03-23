@@ -36,7 +36,10 @@ typedef struct s_command {
 	char    *input_file;      // For '<'
 	char    *output_file;     // For '>' or '>>'
 	int     append_mode;      // 0 for '>', 1 for '>>'
-	// You could also add a field for heredoc delimiter if needed.
+	char    *heredoc_delimiter; // For '<<'
+	int		has_heredoc;
+	int		expand_heredoc;
+	struct s_command *next;   // Next command in a pipeline
 } t_command;
 
 
@@ -49,14 +52,20 @@ t_command *create_command(void);
 t_command *parse_unset(t_token *tokens);
 t_command *parse_env(t_token *tokens);
 t_command *parse_exit(t_token *tokens);
+t_command *parse_pipeline(t_token *tokens);
+t_command *parse_single_command(t_token *tokens);
 int parse_input_redirection(t_command *cmd, t_token **current);
 int parse_output_redirection(t_command *cmd, t_token **current);
-
+int	parse_heredoc(t_command *cmd, t_token **current);
+int parse_append_redirection(t_command *cmd, t_token **current);
+int	has_unmatched_quotes(const char *str);
+int builtin_exit(t_command *cmd);
 int is_valid_export_token(const char *str);
 void free_command(t_command *cmd);
 void add_argument(t_command *cmd, const char *arg);
 int is_valid_identifier(const char *str);
 int is_numeric(const char *str);
+
 // Function Prototypes
 t_token			*tokenize(const char *input);
 t_token			*new_token(t_token_type type, const char *value);

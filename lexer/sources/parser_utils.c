@@ -108,3 +108,89 @@ int is_numeric(const char *str)
     }
     return 1;
 }
+
+int	has_unmatched_quotes(const char *str)
+{
+	char	quote = 0;
+	for (int i = 0; str[i]; i++)
+	{
+		if (!quote && (str[i] == '\'' || str[i] == '"'))
+			quote = str[i];
+		else if (quote && str[i] == quote)
+			quote = 0;
+	}
+	return (quote != 0);
+}
+
+t_command *parse_single_command(t_token *tokens)
+{
+	if (!tokens || !tokens->value)
+		return NULL;
+
+	t_command *cmd = NULL;
+
+	// Handle built-in commands
+	if (strcmp(tokens->value, "echo") == 0)
+		cmd = parse_echo(tokens);
+	else if (strcmp(tokens->value, "cd") == 0)
+		cmd = parse_cd(tokens);
+	else if (strcmp(tokens->value, "pwd") == 0)
+		cmd = parse_pwd(tokens);
+	else if (strcmp(tokens->value, "export") == 0)
+		cmd = parse_export(tokens);
+	else if (strcmp(tokens->value, "unset") == 0)
+		cmd = parse_unset(tokens);
+	else if (strcmp(tokens->value, "env") == 0)
+		cmd = parse_env(tokens);
+	else if (strcmp(tokens->value, "exit") == 0)
+		cmd = parse_exit(tokens);
+	else
+	{
+		// Fallback for non-builtin commands (e.g., grep, ls, wc)
+		cmd = create_command();
+		if (!cmd)
+			return NULL;
+
+		cmd->cmd = ft_strdup(tokens->value);
+		if (!cmd->cmd)
+		{
+			free_command(cmd);
+			return NULL;
+		}
+
+		// ✅ NEW: Collect all WORD tokens as arguments
+		t_token *cur = tokens->next;
+        while (cur && cur->type == WORD)
+        {
+	        add_argument(cmd, cur->value);
+	        cur = cur->next;
+        }
+	}
+
+	// ✅ Also parse redirections (if any)
+	t_token *cur = tokens;
+	while (cur)
+	{
+		if (cur->type == REDIR_IN)
+		{
+			if (parse_input_redirection(cmd, &cur) == -1)
+				return NULL;
+			continue;
+		}
+		else if (cur->type == REDIR_OUT || cur->type == REDIR_APPEND)
+		{
+			if (parse_output_redirection(cmd, &cur) == -1)
+				return NULL;
+			continue;
+		}
+		else if (cur->type == HEREDOC)
+		{
+			if (parse_heredoc(cmd, &cur) == -1)
+				return NULL;
+			continue;
+		}
+		cur = cur->next;
+	}
+
+	return cmd;
+}
