@@ -33,18 +33,17 @@ void	add_token(t_token **head, t_token *new_tok)
 	current->next = new_tok;
 }
 
-void	free_tokens(t_token *head)
+void free_tokens(t_token *head)
 {
-	t_token	*tmp;
-
-	while (head)
-	{
-		tmp = head->next;
-		if (head->value)
-			free(head->value);
-		free(head);
-		head = tmp;
-	}
+    t_token *tmp;
+    while (head)
+    {
+        tmp = head;
+        head = head->next;
+        if (tmp->value)
+            free(tmp->value);
+        free(tmp);
+    }
 }
 
 

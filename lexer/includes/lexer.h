@@ -65,7 +65,10 @@ void free_command(t_command *cmd);
 void add_argument(t_command *cmd, const char *arg);
 int is_valid_identifier(const char *str);
 int is_numeric(const char *str);
-
+//EXPAND_VAR
+char *get_env_value(const char *var);
+char *expand_argument(const char *arg, int last_exit_status);
+void expand_command_arguments(t_command *cmd, int last_exit_status);
 // Function Prototypes
 t_token			*tokenize(const char *input);
 t_token			*new_token(t_token_type type, const char *value);

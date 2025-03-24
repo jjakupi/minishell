@@ -7,34 +7,43 @@
 // Expects the first token to be "echo", then optionally "-n", then the rest as arguments.
 t_command *parse_echo(t_token *tokens)
 {
-    if (!tokens || strcmp(tokens->value, "echo") != 0)
-    {
-        fprintf(stderr, "Command not found\n");
-        return NULL;
-    }
+	if (!tokens || strcmp(tokens->value, "echo") != 0)
+	{
+		fprintf(stderr, "Command not found\n");
+		return NULL;
+	}
 
-    t_command *command = create_command();
-    command->cmd = strdup("echo");
+	t_command *command = create_command();
+	command->cmd = strdup("echo");
 
-    t_token *current = tokens->next; // Skip the "echo" token
+	t_token *current = tokens->next; // Skip the "echo" token
 
-    // Loop to process one or more "-n" flags.
-    while (current && strcmp(current->value, "-n") == 0)
-    {
-        command->suppress_newline = 1; // Set the flag if -n is encountered
-        current = current->next;       // Move to the next token
-    }
+	// Loop to process one or more "-n" flags.
+	while (current && current->type == WORD && strcmp(current->value, "-n") == 0)
+	{
+		command->suppress_newline = 1; // Set the flag if -n is encountered
+		current = current->next;       // Move to the next token
+	}
 
-    // Collect the remaining tokens as arguments.
-    while (current)
-    {
-        if (current->type == WORD)
-        {
-            add_argument(command, current->value);
-        }
-        current = current->next;
-    }
+	char buffer[4096] = {0};
 
-    return command;
+	// Merge adjacent WORD and ENV_VAR tokens into arguments.
+	while (current)
+	{
+		if (current->type == WORD || current->type == ENV_VAR)
+		{
+			buffer[0] = '\0';
+			while (current && (current->type == WORD || current->type == ENV_VAR))
+			{
+				strcat(buffer, current->value);
+				current = current->next;
+			}
+			add_argument(command, buffer);
+		}
+		else
+			current = current->next;
+	}
+
+	return command;
 }
 

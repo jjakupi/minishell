@@ -22,58 +22,53 @@ void print_tokens(t_token *head)
 
 int main(void) {
     char input[1024];
+    int last_exit_status = 0;
 
     printf("Minishell: ");
-    if (fgets(input, sizeof(input), stdin) == NULL) {
-        fprintf(stderr, "Error reading input\n");
+    if (!fgets(input, sizeof(input), stdin))
         return 1;
-    }
+    input[strcspn(input, "\n")] = 0;
 
-    // Remove trailing newline, if any.
-    size_t len = strlen(input);
-    if (len > 0 && input[len - 1] == '\n')
-        input[len - 1] = '\0';
-
-    // Lexing phase: tokenize the input.
     t_token *tokens = tokenize(input);
-    if (!tokens)
-        return 1;
-    print_tokens(tokens);
+    if (!tokens) return 1;
 
-    // Parsing phase: parse the pipeline into a linked list of t_command
     t_command *commands = parse_pipeline(tokens);
     if (!commands) {
-        fprintf(stderr, "Parsing failed.\n");
         free_tokens(tokens);
         return 1;
     }
 
-    // Print the parsed pipeline
-    t_command *cur = commands;
-    int cmd_num = 1;
-    while (cur)
-    {
-        printf("\n--- Command %d ---\n", cmd_num++);
-        if (cur->cmd)
-            printf("Command: %s\n", cur->cmd);
-        if (cur->input_file)
-            printf("Input Redirection: %s\n", cur->input_file);
-        if (cur->output_file)
-            printf("Output Redirection: %s (%s mode)\n",
-                   cur->output_file, cur->append_mode ? "append" : "overwrite");
-        if (cur->has_heredoc)
-            printf("Heredoc: %s (%s)\n",
-                   cur->heredoc_delimiter, cur->expand_heredoc ? "expand" : "no expand");
-        printf("Arguments count: %d\n", cur->arg_count);
-        for (int i = 0; i < cur->arg_count; i++)
-            printf("  arg[%d]: %s\n", i, cur->args[i]);
-
-        cur = cur->next;
+    // Explicitly expand command arguments clearly (DO NOT SKIP THIS)
+    t_command *cur_cmd = commands;
+    while (cur_cmd) {
+        expand_command_arguments(cur_cmd, last_exit_status);
+        cur_cmd = cur_cmd->next;
     }
 
-    // Cleanup: free the token list and command list.
-    free_tokens(tokens);
+    // Print commands AFTER expansion (for testing)
+    cur_cmd = commands;
+    int cmd_num = 1;
+    while (cur_cmd)
+    {
+        printf("\n--- Command %d ---\n", cmd_num++);
+        if (cur_cmd->cmd)
+            printf("Command: %s\n", cur_cmd->cmd);
+        if (cur_cmd->input_file)
+            printf("Input Redirection: %s\n", cur_cmd->input_file);
+        if (cur_cmd->output_file)
+            printf("Output Redirection: %s (%s mode)\n",
+                   cur_cmd->output_file, cur_cmd->append_mode ? "append" : "overwrite");
+        if (cur_cmd->has_heredoc)
+            printf("Heredoc: %s (%s)\n",
+                   cur_cmd->heredoc_delimiter, cur_cmd->expand_heredoc ? "expand" : "no expand");
+        printf("Arguments count: %d\n", cur_cmd->arg_count);
+        for (int i = 0; i < cur_cmd->arg_count; i++)
+            printf("  arg[%d]: %s\n", i, cur_cmd->args[i]);
+
+        cur_cmd = cur_cmd->next;
+    }
+
     free_command(commands);
+    free_tokens(tokens);
     return 0;
 }
-

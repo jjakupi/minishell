@@ -24,23 +24,30 @@ t_command *create_command(void)
 {
     t_command *cmd = malloc(sizeof(t_command));
     if (!cmd)
-    {
-        perror("malloc");
-        exit(EXIT_FAILURE);
-    }
+        return NULL;
     cmd->cmd = NULL;
     cmd->suppress_newline = 0;
-    cmd->args = NULL;
+    cmd->args = NULL;          // Will be allocated when adding arguments
     cmd->arg_count = 0;
+    cmd->input_file = NULL;
+    cmd->output_file = NULL;
+    cmd->append_mode = 0;
+    cmd->heredoc_delimiter = NULL;
+    cmd->has_heredoc = 0;
+    cmd->expand_heredoc = 1;    // or 0, depending on your default behavior
+    cmd->next = NULL;
     return cmd;
 }
+
 
 void free_command(t_command *cmd)
 {
     if (!cmd)
         return;
+
     if (cmd->cmd)
         free(cmd->cmd);
+
     if (cmd->args)
     {
         for (int i = 0; i < cmd->arg_count; i++)
@@ -50,8 +57,23 @@ void free_command(t_command *cmd)
         }
         free(cmd->args);
     }
+
+    if (cmd->input_file)
+        free(cmd->input_file);
+
+    if (cmd->output_file)
+        free(cmd->output_file);
+
+    if (cmd->heredoc_delimiter)
+        free(cmd->heredoc_delimiter);
+
+    // Do not forget to free the next command if this is part of a linked list.
+    if (cmd->next)
+        free_command(cmd->next);
+
     free(cmd);
 }
+
 
 int is_valid_identifier(const char *str)
 {
@@ -146,50 +168,49 @@ t_command *parse_single_command(t_token *tokens)
 		cmd = parse_exit(tokens);
 	else
 	{
-		// Fallback for non-builtin commands (e.g., grep, ls, wc)
 		cmd = create_command();
 		if (!cmd)
 			return NULL;
 
-		cmd->cmd = ft_strdup(tokens->value);
-		if (!cmd->cmd)
-		{
-			free_command(cmd);
-			return NULL;
-		}
+		char buffer[4096] = {0};
+		t_token *cur = tokens;
 
-		// ✅ NEW: Collect all WORD tokens as arguments
-		t_token *cur = tokens->next;
-        while (cur && cur->type == WORD)
-        {
-	        add_argument(cmd, cur->value);
-	        cur = cur->next;
-        }
-	}
-
-	// ✅ Also parse redirections (if any)
-	t_token *cur = tokens;
-	while (cur)
-	{
-		if (cur->type == REDIR_IN)
+		// Merge adjacent WORD and ENV_VAR tokens into complete arguments
+		while (cur)
 		{
-			if (parse_input_redirection(cmd, &cur) == -1)
-				return NULL;
-			continue;
+			if (cur->type == WORD || cur->type == ENV_VAR)
+			{
+				buffer[0] = '\0';
+				while (cur && (cur->type == WORD || cur->type == ENV_VAR))
+				{
+					strcat(buffer, cur->value);
+					cur = cur->next;
+				}
+				if (!cmd->cmd)
+					cmd->cmd = ft_strdup(buffer);
+				add_argument(cmd, buffer);
+				continue;
+			}
+			else if (cur->type == REDIR_IN)
+			{
+				if (parse_input_redirection(cmd, &cur) == -1)
+					return NULL;
+				continue;
+			}
+			else if (cur->type == REDIR_OUT || cur->type == REDIR_APPEND)
+			{
+				if (parse_output_redirection(cmd, &cur) == -1)
+					return NULL;
+				continue;
+			}
+			else if (cur->type == HEREDOC)
+			{
+				if (parse_heredoc(cmd, &cur) == -1)
+					return NULL;
+				continue;
+			}
+			cur = cur->next;
 		}
-		else if (cur->type == REDIR_OUT || cur->type == REDIR_APPEND)
-		{
-			if (parse_output_redirection(cmd, &cur) == -1)
-				return NULL;
-			continue;
-		}
-		else if (cur->type == HEREDOC)
-		{
-			if (parse_heredoc(cmd, &cur) == -1)
-				return NULL;
-			continue;
-		}
-		cur = cur->next;
 	}
 
 	return cmd;

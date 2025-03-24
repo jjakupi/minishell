@@ -21,7 +21,7 @@ int parse_input_redirection(t_command *cmd, t_token **current)
     }
 
     // In the parsing phase, we simply record the filename.
-    cmd->input_file = ft_strdup(filename_token->value);
+    cmd->input_file = strdup(filename_token->value);
     if (!cmd->input_file)
     {
         perror("ft_strdup");
