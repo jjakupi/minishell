@@ -1,6 +1,9 @@
 #ifndef MINISHELL_H
 # define MINISHELL_H
 
+#define GREEN	"\001\033[1;32m\002"
+#define RESET	"\001\033[0m\002"
+#define PROMPT	GREEN "Minishell:~$ " RESET
 
 # include <stdio.h>
 # include <stdlib.h>
@@ -9,7 +12,9 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include "../../libft/libft.h"
-// Define token types
+#include <readline/readline.h>
+#include <readline/history.h>
+
 typedef enum e_token_type
 {
 	WORD,

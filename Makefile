@@ -1,5 +1,5 @@
 # Executable name
-NAME = minishell
+NAME = Minishell
 
 # Directories
 LIBFT_DIR = libft
@@ -29,6 +29,7 @@ OBJ_FILES = $(addprefix $(OBJ_DIR)/, $(notdir $(SOURCES:.c=.o)))
 # Compiler and flags
 CC = gcc
 CFLAGS = -Wall -Wextra -Werror -I$(INCLUDES_DIR) -I$(MINISHELL_INC)
+LDFLAGS = -lreadline
 
 # Pattern rules for lexer sources
 $(OBJ_DIR)/%.o: $(LEXER_DIR)/sources/%.c | $(OBJ_DIR)
@@ -38,7 +39,7 @@ $(OBJ_DIR)/%.o: $(LEXER_DIR)/sources/%.c | $(OBJ_DIR)
 
 # Link everything together with libft to create the executable
 $(NAME): $(LIBFT) $(OBJ_FILES)
-	$(CC) $(CFLAGS) $(OBJ_FILES) -L$(LIBFT_DIR) -lft -o $(NAME)
+	$(CC) $(CFLAGS) $(OBJ_FILES) -L$(LIBFT_DIR) -lft -o $(NAME) $(LDFLAGS)
 
 # Build libft
 $(LIBFT):

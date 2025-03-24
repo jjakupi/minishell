@@ -65,6 +65,11 @@ int execute_builtin(t_command *cmd)
 			unsetenv(cmd->args[i]);
 		return 0;
 	}
+	else if (!strcmp(cmd->cmd, "clear"))
+	{
+		printf("\033[H\033[J");
+		return 0;
+	}
 	else if (!strcmp(cmd->cmd, "exit"))
 		exit(0);
 
