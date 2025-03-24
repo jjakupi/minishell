@@ -18,7 +18,7 @@ LIBFT = $(LIBFT_DIR)/libft.a
 # Source files for each module
 # Adjust these file names to match your actual sources.
 LEXER_SOURCES = lexer.c token.c token_utils.c test_lexer.c parse_pwd.c parse_cd.c parse_echo.c parser_utils.c parse_export.c parse_unset.c parse_env.c parse_exit.c parse_redir_in.c\
- parse_redir_out.c parse_heredoc.c parse_redir_appe.c parse_pipeline.c expand_var.c
+ parse_redir_out.c parse_heredoc.c parse_redir_appe.c parse_pipeline.c expand_var.c execute_builtin.c
 
 # Prefix the sources with their directories
 LEXER_SRCS = $(addprefix $(LEXER_DIR)/sources/, $(LEXER_SOURCES))

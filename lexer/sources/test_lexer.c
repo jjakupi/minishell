@@ -20,55 +20,70 @@ void print_tokens(t_token *head)
     }
 }
 
-int main(void) {
-    char input[1024];
-    int last_exit_status = 0;
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include "lexer.h"
 
-    printf("Minishell: ");
-    if (!fgets(input, sizeof(input), stdin))
-        return 1;
-    input[strcspn(input, "\n")] = 0;
 
-    t_token *tokens = tokenize(input);
-    if (!tokens) return 1;
+int execute_builtin(t_command *cmd);
+void expand_command_arguments(t_command *cmd, int last_exit_status);
 
-    t_command *commands = parse_pipeline(tokens);
-    if (!commands) {
-        free_tokens(tokens);
-        return 1;
-    }
+int main(void)
+{
+	char input[1024];
+	int last_exit_status = 0;
 
-    // Explicitly expand command arguments clearly (DO NOT SKIP THIS)
-    t_command *cur_cmd = commands;
-    while (cur_cmd) {
-        expand_command_arguments(cur_cmd, last_exit_status);
-        cur_cmd = cur_cmd->next;
-    }
+	while (1) // explicitly infinite loop until exit is called
+	{
+		printf("Minishell: ");
+		if (!fgets(input, sizeof(input), stdin))
+		{
+			printf("\n");
+			break; // Exit loop on EOF (Ctrl+D)
+		}
+		input[strcspn(input, "\n")] = 0; // Remove newline
 
-    // Print commands AFTER expansion (for testing)
-    cur_cmd = commands;
-    int cmd_num = 1;
-    while (cur_cmd)
-    {
-        printf("\n--- Command %d ---\n", cmd_num++);
-        if (cur_cmd->cmd)
-            printf("Command: %s\n", cur_cmd->cmd);
-        if (cur_cmd->input_file)
-            printf("Input Redirection: %s\n", cur_cmd->input_file);
-        if (cur_cmd->output_file)
-            printf("Output Redirection: %s (%s mode)\n",
-                   cur_cmd->output_file, cur_cmd->append_mode ? "append" : "overwrite");
-        if (cur_cmd->has_heredoc)
-            printf("Heredoc: %s (%s)\n",
-                   cur_cmd->heredoc_delimiter, cur_cmd->expand_heredoc ? "expand" : "no expand");
-        printf("Arguments count: %d\n", cur_cmd->arg_count);
-        for (int i = 0; i < cur_cmd->arg_count; i++)
-            printf("  arg[%d]: %s\n", i, cur_cmd->args[i]);
+		if (strlen(input) == 0)
+			continue; // skip empty input
 
-        cur_cmd = cur_cmd->next;
-    }
+		t_token *tokens = tokenize(input);
+		if (!tokens)
+			continue;
 
-    free_command(commands);
-    free_tokens(tokens);
-    return 0;
+		t_command *commands = parse_pipeline(tokens);
+		if (!commands) {
+			free_tokens(tokens);
+			continue;
+		}
+
+		// Explicit expansions (CRITICAL)
+		t_command *cur_cmd = commands;
+		while (cur_cmd) {
+			expand_command_arguments(cur_cmd, last_exit_status);
+			cur_cmd = cur_cmd->next;
+		}
+
+		// Execute built-ins explicitly (no external commands for now)
+		cur_cmd = commands;
+        while (cur_cmd)
+        {
+            int status = execute_builtin(cur_cmd);
+
+             if (status == -1)
+            {
+              // Command not found, explicitly set status to 127
+                fprintf(stderr, "%s: command not found\n", cur_cmd->cmd);
+               status = 127;
+            }
+
+             last_exit_status = status; // ✅ explicitly update last_exit_status correctly
+
+            cur_cmd = cur_cmd->next;
+        }
+	}
+
+	return 0;
 }

@@ -69,6 +69,8 @@ int is_numeric(const char *str);
 char *get_env_value(const char *var);
 char *expand_argument(const char *arg, int last_exit_status);
 void expand_command_arguments(t_command *cmd, int last_exit_status);
+//EXECUTION
+int execute_builtin(t_command *cmd);
 // Function Prototypes
 t_token			*tokenize(const char *input);
 t_token			*new_token(t_token_type type, const char *value);
