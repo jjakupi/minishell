@@ -1,8 +1,4 @@
-#include "../includes/lexer.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
+#include "../includes/minishell.h"
 
 // Assuming t_command and create_command are defined in your parsing.h
 t_command *parse_pwd(t_token *tokens)

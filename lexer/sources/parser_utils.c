@@ -1,7 +1,4 @@
-#include "../includes/lexer.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "../includes/minishell.h"
 
 void add_argument(t_command *cmd, const char *arg)
 {
@@ -151,7 +148,7 @@ t_command *parse_single_command(t_token *tokens)
 
 	t_command *cmd = NULL;
 
-	// Handle built-in commands
+	// Handle built-in commands explicitly first
 	if (strcmp(tokens->value, "echo") == 0)
 		cmd = parse_echo(tokens);
 	else if (strcmp(tokens->value, "cd") == 0)
@@ -172,44 +169,52 @@ t_command *parse_single_command(t_token *tokens)
 		if (!cmd)
 			return NULL;
 
-		char buffer[4096] = {0};
+		char buffer[4096];
 		t_token *cur = tokens;
 
-		// Merge adjacent WORD and ENV_VAR tokens into complete arguments
+		// Merge adjacent WORD and ENV_VAR tokens explicitly into separate arguments with spaces
 		while (cur)
 		{
 			if (cur->type == WORD || cur->type == ENV_VAR)
 			{
-				buffer[0] = '\0';
+				buffer[0] = '\0'; // reset buffer for each argument
 				while (cur && (cur->type == WORD || cur->type == ENV_VAR))
 				{
+					if (buffer[0] != '\0')
+						strcat(buffer, " "); // explicitly add a space between tokens
 					strcat(buffer, cur->value);
 					cur = cur->next;
 				}
 				if (!cmd->cmd)
 					cmd->cmd = ft_strdup(buffer);
 				add_argument(cmd, buffer);
-				continue;
 			}
 			else if (cur->type == REDIR_IN)
 			{
 				if (parse_input_redirection(cmd, &cur) == -1)
+				{
+					free_command(cmd);
 					return NULL;
-				continue;
+				}
 			}
 			else if (cur->type == REDIR_OUT || cur->type == REDIR_APPEND)
 			{
 				if (parse_output_redirection(cmd, &cur) == -1)
+				{
+					free_command(cmd);
 					return NULL;
-				continue;
+				}
 			}
 			else if (cur->type == HEREDOC)
 			{
 				if (parse_heredoc(cmd, &cur) == -1)
+				{
+					free_command(cmd);
 					return NULL;
-				continue;
+				}
 			}
-			cur = cur->next;
+			else
+				cur = cur->next;
 		}
 	}
 

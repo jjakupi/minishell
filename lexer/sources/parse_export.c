@@ -1,8 +1,4 @@
-#include "../includes/lexer.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
+#include "../includes/minishell.h"
 
 // parse_export: Expects the first token to be "export".
 // It processes extra tokens by checking if they are valid export arguments.

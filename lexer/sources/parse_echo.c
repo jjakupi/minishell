@@ -1,49 +1,29 @@
-#include "../includes/lexer.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
+#include "../includes/minishell.h"
 // Parse the echo command from a list of tokens.
 // Expects the first token to be "echo", then optionally "-n", then the rest as arguments.
 t_command *parse_echo(t_token *tokens)
 {
-	if (!tokens || strcmp(tokens->value, "echo") != 0)
-	{
-		fprintf(stderr, "Command not found\n");
-		return NULL;
-	}
+    t_command *cmd = create_command();
+    cmd->cmd = ft_strdup("echo");
+    tokens = tokens->next;
 
-	t_command *command = create_command();
-	command->cmd = strdup("echo");
+    char buffer[4096];
 
-	t_token *current = tokens->next; // Skip the "echo" token
-
-	// Loop to process one or more "-n" flags.
-	while (current && current->type == WORD && strcmp(current->value, "-n") == 0)
-	{
-		command->suppress_newline = 1; // Set the flag if -n is encountered
-		current = current->next;       // Move to the next token
-	}
-
-	char buffer[4096] = {0};
-
-	// Merge adjacent WORD and ENV_VAR tokens into arguments.
-	while (current)
-	{
-		if (current->type == WORD || current->type == ENV_VAR)
-		{
-			buffer[0] = '\0';
-			while (current && (current->type == WORD || current->type == ENV_VAR))
-			{
-				strcat(buffer, current->value);
-				current = current->next;
-			}
-			add_argument(command, buffer);
-		}
-		else
-			current = current->next;
-	}
-
-	return command;
+    // Explicitly merge tokens into arguments with spaces
+    while (tokens)
+    {
+        buffer[0] = '\0';
+        while (tokens && (tokens->type == WORD || tokens->type == ENV_VAR))
+        {
+            if (buffer[0] != '\0') // explicitly add spaces between tokens
+                strcat(buffer, " ");
+            strcat(buffer, tokens->value);
+            tokens = tokens->next;
+        }
+        if (buffer[0])
+            add_argument(cmd, buffer);
+        else if (tokens) // Skip non-WORD/ENV_VAR tokens explicitly
+            tokens = tokens->next;
+    }
+    return cmd;
 }
-

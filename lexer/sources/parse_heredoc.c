@@ -1,7 +1,4 @@
-#include "../includes/lexer.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "../includes/minishell.h"
 
 int	parse_heredoc(t_command *cmd, t_token **current)
 {

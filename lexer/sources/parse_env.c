@@ -1,7 +1,4 @@
-#include "../includes/lexer.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "../includes/minishell.h"
 
 t_command *parse_env(t_token *tokens)
 {

@@ -1,4 +1,4 @@
-#include "../includes/lexer.h"
+#include "../includes/minishell.h"
 
 t_token	*tokenize(const char *input)
 {

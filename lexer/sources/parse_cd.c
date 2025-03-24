@@ -1,8 +1,4 @@
-#include "../includes/lexer.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
+#include "../includes/minishell.h"
 // Parse the cd command.
 // Expects first token to be "cd" and exactly one argument after it.
 t_command *parse_cd(t_token *tokens)
@@ -18,7 +14,7 @@ t_command *parse_cd(t_token *tokens)
 
 	t_token *current = tokens->next; // Move past "cd"
 
-	// If no argument is provided, use the HOME environment variable
+	// If no argument is provided, use HOME environment variable
 	if (!current)
 	{
 		char *home = getenv("HOME");
@@ -27,18 +23,20 @@ t_command *parse_cd(t_token *tokens)
 		return command;
 	}
 
-	// Check if there is more than one argument.
+	// If more than one argument, explicitly return NULL to indicate error clearly!
 	if (current->next)
 	{
 		fprintf(stderr, "cd: too many arguments\n");
-		return command;
+		free_command(command); // explicitly free the allocated command
+		return NULL;           // return NULL explicitly after error
 	}
 
-	// ✅ Accept both WORD and ENV_VAR tokens here explicitly
+	// Accept both WORD and ENV_VAR tokens here explicitly
 	if (current->type != WORD && current->type != ENV_VAR)
 	{
 		fprintf(stderr, "cd: invalid argument\n");
-		return command;
+		free_command(command); // explicitly free the allocated command
+		return NULL;           // return NULL explicitly after error
 	}
 
 	add_argument(command, current->value);

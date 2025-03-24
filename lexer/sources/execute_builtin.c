@@ -1,7 +1,4 @@
-#include "../includes/lexer.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "../includes/minishell.h"
 
 int execute_builtin(t_command *cmd)
 {
@@ -34,6 +31,38 @@ int execute_builtin(t_command *cmd)
 			printf("%s\n", cwd);
 		else
 			perror("pwd");
+		return 0;
+	}
+	else if (!strcmp(cmd->cmd, "env"))
+	{
+		extern char **environ;
+		for (int i = 0; environ[i]; i++)
+			printf("%s\n", environ[i]);
+		return 0;
+	}
+	else if (!strcmp(cmd->cmd, "export"))
+	{
+		if (cmd->arg_count == 0)
+		{
+			extern char **environ;
+			for (int i = 0; environ[i]; i++)
+				printf("declare -x %s\n", environ[i]);
+			return 0;
+		}
+		for (int i = 0; i < cmd->arg_count; i++)
+		{
+			if (putenv(cmd->args[i]) != 0)
+			{
+				fprintf(stderr, "export: '%s': not a valid identifier\n", cmd->args[i]);
+				return 1;
+			}
+		}
+		return 0;
+	}
+	else if (!strcmp(cmd->cmd, "unset"))
+	{
+		for (int i = 0; i < cmd->arg_count; i++)
+			unsetenv(cmd->args[i]);
 		return 0;
 	}
 	else if (!strcmp(cmd->cmd, "exit"))

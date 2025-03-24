@@ -1,4 +1,4 @@
-#include "../includes/lexer.h"
+#include "../includes/minishell.h"
 
 t_token	*new_token(t_token_type type, const char *value)
 {

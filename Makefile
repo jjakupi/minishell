@@ -4,20 +4,19 @@ NAME = minishell
 # Directories
 LIBFT_DIR = libft
 LEXER_DIR = lexer
-PARSER_DIR = parsing
 OBJ_DIR = obj
 
 # Include directories
 INCLUDES_DIR = includes
-LEXER_INC = $(LEXER_DIR)/includes
-PARSER_INC = $(PARSER_DIR)/includes
+MINISHELL_INC = $(MINISHELL_DIR)/includes
+
 
 # Libft Library
 LIBFT = $(LIBFT_DIR)/libft.a
 
 # Source files for each module
 # Adjust these file names to match your actual sources.
-LEXER_SOURCES = lexer.c token.c token_utils.c test_lexer.c parse_pwd.c parse_cd.c parse_echo.c parser_utils.c parse_export.c parse_unset.c parse_env.c parse_exit.c parse_redir_in.c\
+LEXER_SOURCES = lexer.c token.c token_utils.c main.c parse_pwd.c parse_cd.c parse_echo.c parser_utils.c parse_export.c parse_unset.c parse_env.c parse_exit.c parse_redir_in.c\
  parse_redir_out.c parse_heredoc.c parse_redir_appe.c parse_pipeline.c expand_var.c execute_builtin.c
 
 # Prefix the sources with their directories
@@ -29,7 +28,7 @@ OBJ_FILES = $(addprefix $(OBJ_DIR)/, $(notdir $(SOURCES:.c=.o)))
 
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror -I$(INCLUDES_DIR) -I$(LEXER_INC)
+CFLAGS = -Wall -Wextra -Werror -I$(INCLUDES_DIR) -I$(MINISHELL_INC)
 
 # Pattern rules for lexer sources
 $(OBJ_DIR)/%.o: $(LEXER_DIR)/sources/%.c | $(OBJ_DIR)
