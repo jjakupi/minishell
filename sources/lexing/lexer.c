@@ -55,37 +55,57 @@ void	process_dollar(const char *input, int *i, t_token **tokens, char **current_
 
 int process_quotes(const char *input, int *i, char **current_arg, t_token **tokens)
 {
-    char quote = input[(*i)++]; // Save and skip the opening quote.
-    int is_double_quote = (quote == '"');
+    char quote = input[(*i)++]; // Get opening quote.
+    int is_double = (quote == '"');
+    int literal = 0;
+    // For single quotes, check if the very first character is '$'.
+    if (!is_double && input[*i] == '$')
+        literal = 1;
 
+    // Accumulate characters until the matching quote.
+    char *temp = NULL;
     while (input[*i] && input[*i] != quote)
     {
-        if (is_double_quote && input[*i] == '$')
-        {
-            flush_current_arg(tokens, current_arg);
-            process_dollar(input, i, tokens, current_arg);
-            continue;
-        }
-        else
-        {
-            *current_arg = append_char(*current_arg, input[*i]);
-            (*i)++;
-        }
+        temp = append_char(temp, input[*i]);
+        (*i)++;
     }
 
     if (input[*i] != quote)
     {
-        fprintf(stderr, "minishell: syntax error while looking for matching ' %c '\n", quote);
-        free(*current_arg);
-        *current_arg = NULL;
-        return (2);  // indicate error
+        fprintf(stderr, "minishell: syntax error while looking for matching %c\n", quote);
+        free(temp);
+        return 2;  // indicate error
     }
+    (*i)++; // Skip the closing quote.
 
-    (*i)++; // skip closing quote
-    if (!input[*i] || is_whitespace(input[*i]) || is_special(input[*i]))
+    // If we're in single quotes and the literal flag is set,
+    // we want to preserve the quotes in the token.
+    if (!is_double && literal)
+    {
+        // Create a new token that preserves the quotes.
+        char *with_quotes = malloc(strlen(temp) + 3); // +2 for quotes, +1 for null
+        if (!with_quotes)
+        {
+            free(temp);
+            return 2;
+        }
+        sprintf(with_quotes, "'%s'", temp);
+        free(temp);
+        temp = with_quotes;
+    }
+    // Otherwise (for single quotes not starting with '$', or for double quotes),
+    // you can choose to strip the quotes (i.e. use temp as-is).
+    // Append the token to your list.
+    if (temp)
+    {
+        // Instead of appending to current_arg, we flush it as a separate token.
+        free(*current_arg);
+        *current_arg = temp;
         flush_current_arg(tokens, current_arg);
-    return (0); // success
+    }
+    return 0;
 }
+
 
 
 void	process_special(const char *input, int *i, t_token **tokens, char **current_arg)

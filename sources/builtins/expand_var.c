@@ -8,13 +8,14 @@ char *get_env_value(const char *var) {
 char *expand_argument(const char *arg, int last_exit_status)
 {
     size_t len = ft_strlen(arg);
-    // Check if the argument is wrapped in single quotes.
+    // If the token is wrapped in single quotes, treat it literally.
     if (len >= 2 && arg[0] == '\'' && arg[len - 1] == '\'')
     {
-        // Return a copy of the content between the quotes.
+        // Return the literal content between the quotes.
         return strndup(arg + 1, len - 2);
     }
 
+    // Otherwise, perform normal expansion:
     char buffer[4096] = {0};
     int i = 0, j = 0;
     while (arg[i])
@@ -25,12 +26,13 @@ char *expand_argument(const char *arg, int last_exit_status)
             {
                 j += sprintf(&buffer[j], "%d", last_exit_status);
                 i += 2;
+                continue;
             }
             else if (arg[i + 1] == '$')
             {
-                // For unquoted or double-quoted tokens, "$$" expands to the PID.
                 j += sprintf(&buffer[j], "%d", getpid());
                 i += 2;
+                continue;
             }
             else if (isalpha(arg[i + 1]) || arg[i + 1] == '_')
             {
@@ -42,15 +44,22 @@ char *expand_argument(const char *arg, int last_exit_status)
                 char *value = getenv(var_name);
                 if (value)
                     j += sprintf(&buffer[j], "%s", value);
+                continue;
             }
             else
+            {
                 buffer[j++] = arg[i++];
+            }
         }
         else
+        {
             buffer[j++] = arg[i++];
+        }
     }
-    return ft_strdup(buffer);
+    return strdup(buffer);
 }
+
+
 
 // Possible incorrect version of your expansion function
 void expand_command_arguments(t_command *cmd, int last_exit_status)

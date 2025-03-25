@@ -83,7 +83,7 @@ int main(void)
             last_exit_status = status;
             cur_cmd = cur_cmd->next;
         }
-        print_tokens(tokens);
+
         free_command(commands);
         free_tokens(tokens);
         free(input);
