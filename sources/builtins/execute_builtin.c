@@ -1,4 +1,4 @@
-#include "../includes/minishell.h"
+#include "../include/minishell.h"
 
 int execute_builtin(t_command *cmd)
 {

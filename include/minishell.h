@@ -14,6 +14,9 @@
 #include "../../libft/libft.h"
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <signal.h>
+
+extern volatile sig_atomic_t g_signal;
 
 typedef enum e_token_type
 {
@@ -101,6 +104,5 @@ void			flush_current_arg(t_token **tokens, char **current_arg);
 void 			process_whitespace(int *i, t_token **tokens, char **current_arg);
 void			process_special(const char *input, int *i, t_token **tokens, char **current_arg);
 void			process_dollar(const char *input, int *i, t_token **tokens, char **current_arg);
-void			process_quotes(const char *input, int *i, char **current_arg, t_token **tokens);
-
+int				process_quotes(const char *input, int *i, char **current_arg, t_token **tokens);
 #endif

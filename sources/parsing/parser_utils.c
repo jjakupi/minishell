@@ -1,4 +1,4 @@
-#include "../includes/minishell.h"
+#include "../include/minishell.h"
 
 void add_argument(t_command *cmd, const char *arg)
 {
@@ -87,10 +87,6 @@ int is_valid_identifier(const char *str)
     return 1;
 }
 
-// Check if a token is a valid export token.
-// Since your lexer already handles quotes, the token value is assumed to be unquoted.
-// It can be either a valid identifier or an assignment NAME=VALUE,
-// where NAME is a valid identifier.
 int is_valid_export_token(const char *str)
 {
     if (!str)

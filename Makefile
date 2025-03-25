@@ -1,68 +1,48 @@
 # Executable name
-NAME = Minishell
+NAME = minishell
 
 # Directories
-LIBFT_DIR = libft
-LEXER_DIR = lexer
+SRC_DIR = sources
 OBJ_DIR = obj
+INC_DIR = include
+LIBFT_DIR = libft
 
-# Include directories
-INCLUDES_DIR = includes
-MINISHELL_INC = $(MINISHELL_DIR)/includes
-
-
-# Libft Library
+# Library
 LIBFT = $(LIBFT_DIR)/libft.a
-
-# Source files for each module
-# Adjust these file names to match your actual sources.
-LEXER_SOURCES = lexer.c token.c token_utils.c main.c parse_pwd.c parse_cd.c parse_echo.c parser_utils.c parse_export.c parse_unset.c parse_env.c parse_exit.c parse_redir_in.c\
- parse_redir_out.c parse_heredoc.c parse_redir_appe.c parse_pipeline.c expand_var.c execute_builtin.c
-
-# Prefix the sources with their directories
-LEXER_SRCS = $(addprefix $(LEXER_DIR)/sources/, $(LEXER_SOURCES))
-SOURCES = $(LEXER_SRCS)
-
-# Generate object file names in OBJ_DIR (strip directory paths)
-OBJ_FILES = $(addprefix $(OBJ_DIR)/, $(notdir $(SOURCES:.c=.o)))
 
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror -I$(INCLUDES_DIR) -I$(MINISHELL_INC)
+CFLAGS = -Wall -Wextra -Werror -I$(INC_DIR) -I$(LIBFT_DIR)
 LDFLAGS = -lreadline
 
-# Pattern rules for lexer sources
-$(OBJ_DIR)/%.o: $(LEXER_DIR)/sources/%.c | $(OBJ_DIR)
+# Find all .c files in sources/**/
+SRCS = $(shell find $(SRC_DIR) -name '*.c')
+OBJS = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
+
+# Create .o file paths and corresponding folders
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Pattern rules for parser sources
-
-# Link everything together with libft to create the executable
-$(NAME): $(LIBFT) $(OBJ_FILES)
-	$(CC) $(CFLAGS) $(OBJ_FILES) -L$(LIBFT_DIR) -lft -o $(NAME) $(LDFLAGS)
+# Link everything into final executable
+$(NAME): $(LIBFT) $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -L$(LIBFT_DIR) -lft -o $(NAME) $(LDFLAGS)
 
 # Build libft
 $(LIBFT):
 	make -C $(LIBFT_DIR)
 
-# Create object directory if it doesn't exist
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
+# Targets
+all: $(NAME)
 
-# Clean: remove object files and clean libft
 clean:
 	rm -rf $(OBJ_DIR)
 	make clean -C $(LIBFT_DIR)
 
-# fclean: full clean including executable and libft objects
 fclean: clean
 	rm -f $(NAME)
 	make fclean -C $(LIBFT_DIR)
 
-# Rebuild everything
 re: fclean all
-
-# Default target
-all: $(NAME)
 
 .PHONY: all clean fclean re

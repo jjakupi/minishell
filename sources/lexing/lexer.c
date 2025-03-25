@@ -1,4 +1,4 @@
-#include "../includes/minishell.h"
+#include "../include/minishell.h"
 
 t_token	*tokenize(const char *input)
 {
@@ -12,11 +12,16 @@ t_token	*tokenize(const char *input)
 			process_whitespace(&i, &tokens, &current_arg);
 		else if (is_special(input[i]))
 			process_special(input, &i, &tokens, &current_arg);
-		else if (input[i] == '\'' || input[i] == '"')
-		{
-			process_quotes(input, &i, &current_arg, &tokens);
-			i++;
-		}
+        else if (input[i] == '\'' || input[i] == '"')
+        {
+             if (process_quotes(input, &i, &current_arg, &tokens))
+            {
+                // There was a syntax error, so abort tokenization.
+                free(current_arg);
+                // Optionally, free tokens list here.
+                return NULL;
+            }
+        }
 		else if (input[i] == '$')
 			process_dollar(input, &i, &tokens, &current_arg);
 		else
@@ -48,24 +53,17 @@ void	process_dollar(const char *input, int *i, t_token **tokens, char **current_
 	}
 }
 
-void	process_quotes(const char *input, int *i, char **current_arg, t_token **tokens)
+int process_quotes(const char *input, int *i, char **current_arg, t_token **tokens)
 {
     char quote = input[(*i)++]; // Save and skip the opening quote.
-
-    // Check if we are processing a double quote.
     int is_double_quote = (quote == '"');
 
-    // Collect characters until we hit the matching quote.
     while (input[*i] && input[*i] != quote)
     {
-        // If inside double quotes, check for a '$' that signals an environment variable.
         if (is_double_quote && input[*i] == '$')
         {
-            // Flush any literal text collected so far.
             flush_current_arg(tokens, current_arg);
-            // Process the dollar variable.
             process_dollar(input, i, tokens, current_arg);
-            // Continue without incrementing *i here because process_dollar updates it.
             continue;
         }
         else
@@ -75,16 +73,20 @@ void	process_quotes(const char *input, int *i, char **current_arg, t_token **tok
         }
     }
 
-    // If a closing quote is found, skip it.
-    if (input[*i] == quote)
-        (*i)++;
-
-    // After finishing, check the next character.
-    if (!input[*i] || is_whitespace(input[*i]) || is_special(input[*i]))
+    if (input[*i] != quote)
     {
-        flush_current_arg(tokens, current_arg);
+        fprintf(stderr, "minishell: syntax error while looking for matching ' %c '\n", quote);
+        free(*current_arg);
+        *current_arg = NULL;
+        return (2);  // indicate error
     }
+
+    (*i)++; // skip closing quote
+    if (!input[*i] || is_whitespace(input[*i]) || is_special(input[*i]))
+        flush_current_arg(tokens, current_arg);
+    return (0); // success
 }
+
 
 void	process_special(const char *input, int *i, t_token **tokens, char **current_arg)
 {
