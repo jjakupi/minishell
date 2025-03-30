@@ -14,7 +14,7 @@ t_token	*tokenize(const char *input)
 			process_special(input, &i, &tokens, &current_arg);
 		else if (input[i] == '\'' || input[i] == '"')
 		{
-			if (process_quotes(input, &i, &current_arg, &tokens))
+			if (process_quotes(input, &i, &current_arg))
 			{
 				free(current_arg);
 				free_tokens(tokens);
@@ -28,8 +28,7 @@ t_token	*tokenize(const char *input)
 	return tokens;
 }
 
-// Process quoted strings (always literal)
-int process_quotes(const char *input, int *i, char **current_arg, t_token **tokens)
+int process_quotes(const char *input, int *i, char **current_arg)
 {
 	char quote = input[(*i)++];
 	char *temp = NULL;
@@ -39,14 +38,27 @@ int process_quotes(const char *input, int *i, char **current_arg, t_token **toke
 
 	if (input[*i] != quote)
 	{
-		fprintf(stderr, "minishell: unmatched %c\n", quote);
+		fprintf(stderr, "minishell: Syntax error unmatched '%c'\n", quote);
 		free(temp);
 		return 1;
 	}
 	(*i)++;
 
-	flush_current_arg(tokens, current_arg);
-	add_token(tokens, new_token(WORD, temp));
+	if (!temp) // Explicitly handle empty quotes
+		temp = strdup("");
+
+	// Append the quoted content directly to the current_arg clearly
+	if (*current_arg)
+	{
+		char *new_arg = ft_strjoin(*current_arg, temp);
+		free(*current_arg);
+		*current_arg = new_arg;
+	}
+	else
+	{
+		*current_arg = strdup(temp);
+	}
+
 	free(temp);
 	return 0;
 }

@@ -32,6 +32,7 @@ int parse_input_redirection(t_command *cmd, t_token **current)
 
 int parse_output_redirection(t_command *cmd, t_token **current)
 {
+
     // Ensure the current token is the '>' operator.
     if (*current == NULL || (*current)->type != REDIR_OUT) {
         fprintf(stderr, "Internal error: expected output redirection operator\n");

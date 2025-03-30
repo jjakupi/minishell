@@ -1,5 +1,5 @@
 #include "../include/minishell.h"
-
+extern char **environ;
 // Simple token printing for debugging
 void print_tokens(t_token *head)
 {
@@ -20,74 +20,64 @@ void print_tokens(t_token *head)
 
 int main(void)
 {
-    int last_exit_status = 0;
+	char *input;
+	t_token *tokens;
+	t_command *cmds;
+	int parse_status;
+	int last_exit_status = 0;
+    (void)last_exit_status;
+	while (1)
+	{
+		input = readline(PROMPT);
+		if (!input)
+		{
+			printf("exit\n");
+			break;
+		}
 
-    while (1)
-    {
-        char *input = readline(PROMPT);
-        if (!input)
-        {
-            printf("exit\n");
-            break;
-        }
+		if (*input)
+			add_history(input);
 
-        if (*input)
-            add_history(input);
+		tokens = tokenize(input);
+		if (!tokens)
+		{
+			free(input);
+			continue;
+		}
 
-        t_token *tokens = tokenize(input);
-        if (!tokens)
-        {
-            fprintf(stderr, "Syntax error during tokenization\n");
-            free(input);
-            continue;
-        }
+		parse_status = parse_pipeline(tokens, &cmds);
+		if (parse_status == 2 || !cmds)
+		{
+			free_tokens(tokens);
+			free(input);
+			last_exit_status = 2;
+			continue;
+		}
 
-        t_command *cmd = parse_single_command(tokens);
-        if (!cmd)
-        {
-            fprintf(stderr, "Parsing failed\n");
-            free_tokens(tokens);
-            free(input);
-            continue;
-        }
+		printf("--- Commands Debug ---\n");
+		for (t_command *cmd = cmds; cmd; cmd = cmd->next)
+		{
+			printf("[COMMAND] Name: '%s'\n", cmd->cmd);
+			for (int x = 0; x < cmd->arg_count; x++)
+				printf("[ARG %d]: '%s'\n", x, cmd->args[x]);
+			if (cmd->input_file)
+				printf("[INPUT FILE]: '%s'\n", cmd->input_file);
+			if (cmd->output_file)
+				printf("[OUTPUT FILE]: '%s' (append: %d)\n",
+						cmd->output_file, cmd->append_mode);
+			if (cmd->has_heredoc)
+				printf("[HEREDOC]: '%s'\n", cmd->heredoc_delimiter);
+		}
 
-        // Explicitly expand arguments ONLY ONCE clearly
-        for (int x = 0; x < cmd->arg_count; x++)
-        {
-            char *expanded_arg = expand_argument(cmd->args[x], last_exit_status);
-            free(cmd->args[x]);
-            cmd->args[x] = expanded_arg;
-        }
+		if (cmds)
+			last_exit_status = execute_builtin(cmds);
 
-        // Explicitly expand command ONCE, preserving quotes until AFTER expansion
-        char *expanded_cmd = expand_argument(cmd->cmd, last_exit_status);
-        free(cmd->cmd);
-
-        // Only remove quotes AFTER expansion explicitly
-        cmd->cmd = remove_surrounding_quotes(expanded_cmd);
-        free(expanded_cmd);
-
-        // Debug explicitly
-        printf("[DEBUG] Command after expansion: '%s'\n", cmd->cmd);
-        for (int x = 0; x < cmd->arg_count; x++)
-            printf("[DEBUG] Arg[%d] after expansion: '%s'\n", x, cmd->args[x]);
-
-        int status = execute_builtin(cmd);
-        if (status == -1)
-        {
-            fprintf(stderr, "minishell: %s: command not found\n", cmd->cmd);
-            status = 127;
-        }
-
-        last_exit_status = status;
-
-        free_command(cmd);
-        free_tokens(tokens);
-        free(input);
-    }
-    return 0;
+		free_command(cmds);
+		free_tokens(tokens);
+		free(input);
+	}
+	return 0;
 }
-
 
 
 char *remove_surrounding_quotes(const char *str)

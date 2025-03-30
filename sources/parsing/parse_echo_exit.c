@@ -3,17 +3,26 @@
 t_command *parse_echo(t_token *tokens)
 {
 	t_command *cmd = create_command();
-	cmd->cmd = ft_strdup("echo");
-	tokens = tokens->next; // skip the initial echo token
+	if (!cmd)
+		return NULL;
 
-	while (tokens)
+	cmd->cmd = ft_strdup("echo");
+	if (!cmd->cmd)
 	{
-		if (tokens->type == WORD || tokens->type == ENV_VAR)
-			add_argument(cmd, tokens->value);
+		free_command(cmd);
+		return NULL;
+	}
+
+	tokens = tokens->next; // explicitly skip initial "echo" token
+
+	while (tokens && (tokens->type == WORD || tokens->type == ENV_VAR))
+	{
+		add_argument(cmd, tokens->value);
 		tokens = tokens->next;
 	}
 	return cmd;
 }
+
 
 
 t_command *parse_env(t_token *tokens)

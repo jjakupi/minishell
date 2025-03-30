@@ -136,24 +136,93 @@ int	has_unmatched_quotes(const char *str)
 	}
 	return (quote != 0);
 }
+int	is_operator(int type)
+{
+	return (type == PIPE || type == REDIR_IN || type == REDIR_OUT
+		|| type == REDIR_APPEND || type == HEREDOC);
+}
+
 t_command *parse_single_command(t_token *tokens)
 {
-    if (!tokens)
-        return NULL;
+	if (!tokens)
+		return NULL;
 
-    t_command *cmd = create_command();
+	t_command *cmd = NULL;
 
-    // First token is always the command name
-    cmd->cmd = ft_strdup(tokens->value);
-    tokens = tokens->next;
+	if (!strcmp(tokens->value, "cd"))
+		cmd = parse_cd(tokens);
+	else if (!strcmp(tokens->value, "export"))
+		cmd = parse_export(tokens);
+	else if (!strcmp(tokens->value, "unset"))
+		cmd = parse_unset(tokens);
+	else if (!strcmp(tokens->value, "env"))
+		cmd = parse_env(tokens);
+	else if (!strcmp(tokens->value, "exit"))
+		cmd = parse_exit(tokens);
+	else if (!strcmp(tokens->value, "echo"))
+		cmd = parse_echo(tokens);
+	else if (!strcmp(tokens->value, "pwd"))
+		cmd = parse_pwd(tokens);
+	else
+	{
+		// Generic commands explicitly handled here
+		cmd = create_command();
+		if (!cmd)
+			return NULL;
 
-    // Remaining tokens are arguments
-    while (tokens)
-    {
-        if (tokens->type == WORD)
-            add_argument(cmd, tokens->value);
-        tokens = tokens->next;
-    }
+		cmd->cmd = ft_strdup(tokens->value);
+		if (!cmd->cmd)
+		{
+			free_command(cmd);
+			return NULL;
+		}
 
-    return cmd;
+		tokens = tokens->next;
+		while (tokens)
+		{
+			if (tokens->type == REDIR_OUT)
+			{
+				if (parse_output_redirection(cmd, &tokens) == -1)
+				{
+					free_command(cmd);
+					return NULL;
+				}
+			}
+			else if (tokens->type == REDIR_APPEND)
+			{
+				if (parse_append_redirection(cmd, &tokens) == -1)
+				{
+					free_command(cmd);
+					return NULL;
+				}
+			}
+			else if (tokens->type == REDIR_IN)
+			{
+				if (parse_input_redirection(cmd, &tokens) == -1)
+				{
+					free_command(cmd);
+					return NULL;
+				}
+			}
+			else if (tokens->type == HEREDOC)
+			{
+				if (parse_heredoc(cmd, &tokens) == -1)
+				{
+					free_command(cmd);
+					return NULL;
+				}
+			}
+			else if (tokens->type == WORD || tokens->type == ENV_VAR)
+			{
+				add_argument(cmd, tokens->value);
+				tokens = tokens->next;
+			}
+			else
+				tokens = tokens->next;
+		}
+		return cmd; // explicitly return here for generic commands
+	}
+
+	// Explicit fix: Immediately return after built-in parsing
+	return cmd;
 }

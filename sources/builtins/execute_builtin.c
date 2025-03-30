@@ -1,5 +1,14 @@
 #include "../include/minishell.h"
 
+// Check if command is a built-in
+int is_builtin(char *cmd)
+{
+    return (!ft_strcmp(cmd, "echo") || !ft_strcmp(cmd, "cd") ||
+            !ft_strcmp(cmd, "pwd") || !ft_strcmp(cmd, "export") ||
+            !ft_strcmp(cmd, "unset") || !ft_strcmp(cmd, "env") ||
+            !ft_strcmp(cmd, "exit"));
+}
+
 int execute_builtin(t_command *cmd)
 {
 	if (!cmd || !cmd->cmd)
@@ -29,9 +38,16 @@ int execute_builtin(t_command *cmd)
 		return 0;
 	}
 
-	// Placeholder for additional built-in commands
-	// e.g., if (!strcmp(cmd->cmd, "cd")) { ... }
-	//       if (!strcmp(cmd->cmd, "pwd")) { ... }
+	// Recognize your future built-ins here explicitly
+	if (!strcmp(cmd->cmd, "cd") || !strcmp(cmd->cmd, "pwd") ||
+		!strcmp(cmd->cmd, "export") || !strcmp(cmd->cmd, "unset") ||
+		!strcmp(cmd->cmd, "exit"))
+	{
+		printf("[DEBUG] Built-in '%s' recognized but not yet implemented\n", cmd->cmd);
+		return 0;
+	}
 
-	return -1; // Command not found among built-ins
+	fprintf(stderr, "minishell: %s: command not found\n", cmd->cmd);
+	return 127;
 }
+
