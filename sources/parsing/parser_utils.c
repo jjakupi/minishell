@@ -136,83 +136,24 @@ int	has_unmatched_quotes(const char *str)
 	}
 	return (quote != 0);
 }
-
 t_command *parse_single_command(t_token *tokens)
 {
-	if (!tokens || !tokens->value)
-		return NULL;
+    if (!tokens)
+        return NULL;
 
-	t_command *cmd = NULL;
+    t_command *cmd = create_command();
 
-	// Handle built-in commands explicitly first
-	if (strcmp(tokens->value, "echo") == 0)
-		cmd = parse_echo(tokens);
-	else if (strcmp(tokens->value, "cd") == 0)
-		cmd = parse_cd(tokens);
-	else if (strcmp(tokens->value, "pwd") == 0)
-		cmd = parse_pwd(tokens);
-	else if (strcmp(tokens->value, "export") == 0)
-		cmd = parse_export(tokens);
-	else if (strcmp(tokens->value, "unset") == 0)
-		cmd = parse_unset(tokens);
-	else if (strcmp(tokens->value, "env") == 0)
-		cmd = parse_env(tokens);
-	else if (strcmp(tokens->value, "exit") == 0)
-		cmd = parse_exit(tokens);
-	else
-	{
-		cmd = create_command();
-		if (!cmd)
-			return NULL;
+    // First token is always the command name
+    cmd->cmd = ft_strdup(tokens->value);
+    tokens = tokens->next;
 
-		char buffer[4096];
-		t_token *cur = tokens;
+    // Remaining tokens are arguments
+    while (tokens)
+    {
+        if (tokens->type == WORD)
+            add_argument(cmd, tokens->value);
+        tokens = tokens->next;
+    }
 
-		// Merge adjacent WORD and ENV_VAR tokens explicitly into separate arguments with spaces
-		while (cur)
-		{
-			if (cur->type == WORD || cur->type == ENV_VAR)
-			{
-				buffer[0] = '\0'; // reset buffer for each argument
-				while (cur && (cur->type == WORD || cur->type == ENV_VAR))
-				{
-					if (buffer[0] != '\0')
-						strcat(buffer, " "); // explicitly add a space between tokens
-					strcat(buffer, cur->value);
-					cur = cur->next;
-				}
-				if (!cmd->cmd)
-					cmd->cmd = ft_strdup(buffer);
-				add_argument(cmd, buffer);
-			}
-			else if (cur->type == REDIR_IN)
-			{
-				if (parse_input_redirection(cmd, &cur) == -1)
-				{
-					free_command(cmd);
-					return NULL;
-				}
-			}
-			else if (cur->type == REDIR_OUT || cur->type == REDIR_APPEND)
-			{
-				if (parse_output_redirection(cmd, &cur) == -1)
-				{
-					free_command(cmd);
-					return NULL;
-				}
-			}
-			else if (cur->type == HEREDOC)
-			{
-				if (parse_heredoc(cmd, &cur) == -1)
-				{
-					free_command(cmd);
-					return NULL;
-				}
-			}
-			else
-				cur = cur->next;
-		}
-	}
-
-	return cmd;
+    return cmd;
 }

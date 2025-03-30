@@ -1,21 +1,23 @@
 #include "../include/minishell.h"
 
+// Simple token printing for debugging
 void print_tokens(t_token *head)
 {
     t_token *current = head;
     if (!current)
     {
-        printf("DEBUG: No tokens to print!\n");
+        printf("No tokens to print!\n");
         return;
     }
     while (current)
     {
-        printf("Token type: %s, value: '%s'\n",
+        printf("Token type: %s | Value: '%s'\n",
                token_type_to_str(current->type),
                current->value ? current->value : "(null)");
         current = current->next;
     }
 }
+
 int main(void)
 {
     int last_exit_status = 0;
@@ -29,64 +31,70 @@ int main(void)
             break;
         }
 
-        // Add to history if input is not empty
         if (*input)
             add_history(input);
 
-        // 🔧 Trigger rl_clear_history for test
-        if (strcmp(input, "history -c") == 0)
-        {
-            rl_clear_history();
-            free(input);
-            continue;
-        }
-
-        // Tokenize input
         t_token *tokens = tokenize(input);
         if (!tokens)
         {
-            // A syntax error occurred during tokenization (e.g. unmatched quote)
-            last_exit_status = 2;
+            fprintf(stderr, "Syntax error during tokenization\n");
             free(input);
             continue;
         }
 
-        // Build command pipeline
-        t_command *commands = parse_pipeline(tokens);
-        if (!commands)
+        t_command *cmd = parse_single_command(tokens);
+        if (!cmd)
         {
-            // A syntax error occurred during parsing
-            last_exit_status = 2;
+            fprintf(stderr, "Parsing failed\n");
             free_tokens(tokens);
             free(input);
             continue;
         }
 
-        // Expand command arguments
-        t_command *cur_cmd = commands;
-        while (cur_cmd)
+        // Explicitly expand arguments ONLY ONCE clearly
+        for (int x = 0; x < cmd->arg_count; x++)
         {
-            expand_command_arguments(cur_cmd, last_exit_status);
-            cur_cmd = cur_cmd->next;
+            char *expanded_arg = expand_argument(cmd->args[x], last_exit_status);
+            free(cmd->args[x]);
+            cmd->args[x] = expanded_arg;
         }
 
-        // Execute built-in commands
-        cur_cmd = commands;
-        while (cur_cmd)
+        // Explicitly expand command ONCE, preserving quotes until AFTER expansion
+        char *expanded_cmd = expand_argument(cmd->cmd, last_exit_status);
+        free(cmd->cmd);
+
+        // Only remove quotes AFTER expansion explicitly
+        cmd->cmd = remove_surrounding_quotes(expanded_cmd);
+        free(expanded_cmd);
+
+        // Debug explicitly
+        printf("[DEBUG] Command after expansion: '%s'\n", cmd->cmd);
+        for (int x = 0; x < cmd->arg_count; x++)
+            printf("[DEBUG] Arg[%d] after expansion: '%s'\n", x, cmd->args[x]);
+
+        int status = execute_builtin(cmd);
+        if (status == -1)
         {
-            int status = execute_builtin(cur_cmd);
-            if (status == -1)
-            {
-                fprintf(stderr, "%s: command not found\n", cur_cmd->cmd);
-                status = 127;
-            }
-            last_exit_status = status;
-            cur_cmd = cur_cmd->next;
+            fprintf(stderr, "minishell: %s: command not found\n", cmd->cmd);
+            status = 127;
         }
 
-        free_command(commands);
+        last_exit_status = status;
+
+        free_command(cmd);
         free_tokens(tokens);
         free(input);
     }
     return 0;
+}
+
+
+
+char *remove_surrounding_quotes(const char *str)
+{
+    size_t len = strlen(str);
+    if (len >= 2 && ((str[0] == '"' && str[len - 1] == '"') ||
+                     (str[0] == '\'' && str[len - 1] == '\'')))
+        return ft_substr(str, 1, len - 2);
+    return strdup(str);
 }

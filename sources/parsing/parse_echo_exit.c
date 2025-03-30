@@ -2,30 +2,19 @@
 
 t_command *parse_echo(t_token *tokens)
 {
-    t_command *cmd = create_command();
-    cmd->cmd = ft_strdup("echo");
-    tokens = tokens->next;
+	t_command *cmd = create_command();
+	cmd->cmd = ft_strdup("echo");
+	tokens = tokens->next; // skip the initial echo token
 
-    char buffer[4096];
-
-    // Explicitly merge tokens into arguments with spaces
-    while (tokens)
-    {
-        buffer[0] = '\0';
-        while (tokens && (tokens->type == WORD || tokens->type == ENV_VAR))
-        {
-            if (buffer[0] != '\0') // explicitly add spaces between tokens
-                strcat(buffer, " ");
-            strcat(buffer, tokens->value);
-            tokens = tokens->next;
-        }
-        if (buffer[0])
-            add_argument(cmd, buffer);
-        else if (tokens) // Skip non-WORD/ENV_VAR tokens explicitly
-            tokens = tokens->next;
-    }
-    return cmd;
+	while (tokens)
+	{
+		if (tokens->type == WORD || tokens->type == ENV_VAR)
+			add_argument(cmd, tokens->value);
+		tokens = tokens->next;
+	}
+	return cmd;
 }
+
 
 t_command *parse_env(t_token *tokens)
 {

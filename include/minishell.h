@@ -80,6 +80,7 @@ int is_numeric(const char *str);
 char *get_env_value(const char *var);
 char *expand_argument(const char *arg, int last_exit_status);
 void expand_command_arguments(t_command *cmd, int last_exit_status);
+
 //EXECUTION
 int execute_builtin(t_command *cmd);
 // Function Prototypes
@@ -105,4 +106,5 @@ void 			process_whitespace(int *i, t_token **tokens, char **current_arg);
 void			process_special(const char *input, int *i, t_token **tokens, char **current_arg);
 void			process_dollar(const char *input, int *i, t_token **tokens, char **current_arg);
 int				process_quotes(const char *input, int *i, char **current_arg, t_token **tokens);
+char *remove_surrounding_quotes(const char *str);
 #endif
