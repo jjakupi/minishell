@@ -54,7 +54,6 @@ int main(void)
 			continue;
 		}
 
-		printf("--- Commands Debug ---\n");
 		for (t_command *cmd = cmds; cmd; cmd = cmd->next)
 		{
 			printf("[COMMAND] Name: '%s'\n", cmd->cmd);

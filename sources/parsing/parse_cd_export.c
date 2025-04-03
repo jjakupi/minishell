@@ -4,16 +4,22 @@ t_command *parse_cd(t_token *tokens)
 {
 	if (!tokens || ft_strcmp(tokens->value, "cd") != 0)
 	{
-		fprintf(stderr, "Error: Expected cd command\n");
+		printf("minishell: Error: Expected cd command\n");
 		return NULL;
 	}
 
 	t_command *command = create_command();
+	if (!command)
+		return NULL;
+
 	command->cmd = ft_strdup("cd");
+	if (!command->cmd)
+	{
+		free_command(command);
+		return NULL;
+	}
 
-	t_token *current = tokens->next; // Move past "cd"
-
-	// If no argument is provided, use HOME environment variable
+	t_token *current = tokens->next; // explicitly move past "cd"
 	if (!current)
 	{
 		char *home = getenv("HOME");
@@ -21,27 +27,29 @@ t_command *parse_cd(t_token *tokens)
 			add_argument(command, home);
 		return command;
 	}
-
-	// If more than one argument, explicitly return NULL to indicate error clearly!
-	if (current->next)
+	// Explicit syntax check for redirection or pipe tokens as first argument
+	if (current->type == PIPE || current->type == REDIR_IN ||
+		current->type == REDIR_OUT || current->type == REDIR_APPEND ||
+		current->type == HEREDOC)
 	{
-		fprintf(stderr, "cd: too many arguments\n");
-		free_command(command); // explicitly free the allocated command
-		return NULL;           // return NULL explicitly after error
+		printf("minishell: syntax error near unexpected token `newline'\n");
+		free_command(command);
+		return NULL;
 	}
 
-	// Accept both WORD and ENV_VAR tokens here explicitly
-	if (current->type != WORD && current->type != ENV_VAR)
+	// Check explicitly if too many arguments
+	if (current->next)
 	{
-		fprintf(stderr, "cd: invalid argument\n");
-		free_command(command); // explicitly free the allocated command
-		return NULL;           // return NULL explicitly after error
+		printf("minishell: cd: too many arguments\n");
+		free_command(command);
+		return NULL;
 	}
 
 	add_argument(command, current->value);
 
 	return command;
 }
+
 
 t_command *parse_export(t_token *tokens)
 {

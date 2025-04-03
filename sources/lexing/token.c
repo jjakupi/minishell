@@ -6,28 +6,21 @@ t_token	*new_token(t_token_type type, const char *value)
 
 	token = malloc(sizeof(t_token));
 	if (!token)
-	{
-		perror("malloc failed for token");
-		exit(EXIT_FAILURE);
-	}
+		exit_with_error("malloc (new_token)");
 	token->type = type;
 	if (value)
 	{
-		token->value = strdup(value);
+		token->value = ft_strdup(value);
 		if (!token->value)
-		{
-			free(token);
-			perror("strdup failed for token value");
-			exit(EXIT_FAILURE);
-		}
+			exit_with_error("ft_strdup (new_token)");
 	}
 	else
 		token->value = NULL;
 	token->next = NULL;
-	return token;
+	return (token);
 }
 
-// Efficiently add a token to the end of the linked list
+
 void	add_token(t_token **head, t_token *new_tok)
 {
 	static t_token	*last = NULL;
@@ -46,7 +39,6 @@ void	add_token(t_token **head, t_token *new_tok)
 	}
 }
 
-// Safely free all tokens in the linked list
 void	free_tokens(t_token *head)
 {
 	t_token	*tmp;
@@ -60,7 +52,6 @@ void	free_tokens(t_token *head)
 	}
 }
 
-// Get a readable string representation of a token type
 const char	*token_type_to_str(t_token_type type)
 {
 	if (type == WORD)

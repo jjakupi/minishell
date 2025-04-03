@@ -165,7 +165,6 @@ t_command *parse_single_command(t_token *tokens)
 		cmd = parse_pwd(tokens);
 	else
 	{
-		// Generic commands explicitly handled here
 		cmd = create_command();
 		if (!cmd)
 			return NULL;
@@ -180,36 +179,34 @@ t_command *parse_single_command(t_token *tokens)
 		tokens = tokens->next;
 		while (tokens)
 		{
-			if (tokens->type == REDIR_OUT)
+			if (tokens->type == REDIR_IN || tokens->type == REDIR_OUT ||
+			    tokens->type == REDIR_APPEND || tokens->type == HEREDOC)
 			{
-				if (parse_output_redirection(cmd, &tokens) == -1)
+				if (!tokens->next)
 				{
+					printf("minishell: syntax error near unexpected token `newline'\n");
 					free_command(cmd);
 					return NULL;
 				}
-			}
-			else if (tokens->type == REDIR_APPEND)
-			{
-				if (parse_append_redirection(cmd, &tokens) == -1)
+				else if (tokens->next->type == PIPE || tokens->next->type == REDIR_IN ||
+						 tokens->next->type == REDIR_OUT || tokens->next->type == REDIR_APPEND ||
+						 tokens->next->type == HEREDOC)
 				{
+					printf("minishell: syntax error near unexpected token `%s'\n", tokens->next->value);
 					free_command(cmd);
 					return NULL;
 				}
-			}
-			else if (tokens->type == REDIR_IN)
-			{
-				if (parse_input_redirection(cmd, &tokens) == -1)
+				else
 				{
-					free_command(cmd);
-					return NULL;
-				}
-			}
-			else if (tokens->type == HEREDOC)
-			{
-				if (parse_heredoc(cmd, &tokens) == -1)
-				{
-					free_command(cmd);
-					return NULL;
+					if ((tokens->type == REDIR_OUT && parse_output_redirection(cmd, &tokens) == -1) ||
+						(tokens->type == REDIR_APPEND && parse_append_redirection(cmd, &tokens) == -1) ||
+						(tokens->type == REDIR_IN && parse_input_redirection(cmd, &tokens) == -1) ||
+						(tokens->type == HEREDOC && parse_heredoc(cmd, &tokens) == -1))
+					{
+						free_command(cmd);
+						return NULL;
+					}
+					continue;
 				}
 			}
 			else if (tokens->type == WORD || tokens->type == ENV_VAR)
@@ -217,12 +214,17 @@ t_command *parse_single_command(t_token *tokens)
 				add_argument(cmd, tokens->value);
 				tokens = tokens->next;
 			}
+			else if (tokens->type == PIPE)
+			{
+				printf("minishell: syntax error near unexpected token `|'\n");
+				free_command(cmd);
+				return NULL;
+			}
 			else
 				tokens = tokens->next;
 		}
-		return cmd; // explicitly return here for generic commands
+		return cmd;
 	}
 
-	// Explicit fix: Immediately return after built-in parsing
 	return cmd;
 }

@@ -72,6 +72,7 @@ int	parse_heredoc(t_command *cmd, t_token **current);
 int parse_append_redirection(t_command *cmd, t_token **current);
 int	has_unmatched_quotes(const char *str);
 int builtin_exit(t_command *cmd);
+int builtin_echo(t_command *cmd);
 int is_valid_export_token(const char *str);
 void free_command(t_command *cmd);
 void add_argument(t_command *cmd, const char *arg);
@@ -81,7 +82,12 @@ int is_numeric(const char *str);
 char *get_env_value(const char *var);
 char *expand_argument(const char *arg, int last_exit_status);
 void expand_command_arguments(t_command *cmd, int last_exit_status);
-
+// minishell.h explicitly:
+void	exit_with_error(const char *msg);
+int		syntax_error(const char *unexpected_token);
+char *ft_strcpy(char *dest, const char *src);
+char *ft_strndup(const char *s, size_t n);
+int	ft_strcmp(const char *s1, const char *s2);
 //EXECUTION
 int execute_builtin(t_command *cmd);
 // Function Prototypes
@@ -97,16 +103,13 @@ char			*extract_special(const char *input, int *index);
 int				is_whitespace(char c);
 int				is_special(char c);
 int				is_invalid_character(char c);
-int				ft_strcmp(const char *s1, const char *s2);
-char			*ft_strjoin3(const char *s1, const char *sep, const char *s2);
 void			process_env_in_quotes(const char *input, int *index, int *start, t_token **head);
-char			*append_str(char *str, const char *to_append);
 char 			*append_char(char *str, char c);
 void			flush_current_arg(t_token **tokens, char **current_arg);
 void 			process_whitespace(int *i, t_token **tokens, char **current_arg);
 void			process_special(const char *input, int *i, t_token **tokens, char **current_arg);
 void			process_dollar(const char *input, int *i, t_token **tokens, char **current_arg);
-int process_quotes(const char *input, int *i, char **current_arg);
+int				process_quotes(const char *input, int *i, char **current_arg);
 char 			*remove_surrounding_quotes(const char *str);
-int execute_command(t_command *cmd);
+int				execute_command(t_command *cmd);
 #endif
