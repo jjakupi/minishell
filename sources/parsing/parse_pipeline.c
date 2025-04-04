@@ -2,64 +2,77 @@
 
 int parse_pipeline(t_token *tokens, t_command **result)
 {
-	t_command	*head = NULL;
-	t_command	*current_cmd = NULL;
-	t_token		*start = tokens;
-	t_token		*current = tokens;
+    t_command *head = NULL;
+    t_command *current_cmd = NULL;
+    t_token *start = tokens;
+    t_token *current = tokens;
 
-	if (check_syntax_errors(tokens))
-	{
-		*result = NULL;
-		return (2);
-	}
+    if (check_syntax_errors(tokens))
+    {
+        *result = NULL;
+        return 2;
+    }
 
-	while (current)
-	{
-		if (current->type == PIPE)
-		{
-			t_token *next_cmd_tokens = current->next;
+    while (current)
+    {
+        if (current->type == PIPE)
+        {
+            t_token *next_cmd_tokens = current->next;
 
-			current->next = NULL; // Temporarily split tokens
-			t_command *parsed = parse_single_command(start);
+            // Corrected: find the token BEFORE the PIPE to disconnect cleanly.
+            t_token *prev = start;
+            if (prev == current)  // Special case: PIPE at the start
+            {
+                printf("minishell: syntax error near unexpected token `|'\n");
+                free_command(head);
+                *result = NULL;
+                return 2;
+            }
 
-			current->next = next_cmd_tokens; // Restore tokens immediately!
+            while (prev->next && prev->next != current)
+                prev = prev->next;
 
-			if (!parsed)
-			{
-				free_command(head);
-				*result = NULL;
-				return (2);
-			}
+            prev->next = NULL;  // Correctly isolate BEFORE PIPE
 
-			if (!head)
-				head = parsed;
-			else
-				current_cmd->next = parsed;
+            t_command *parsed = parse_single_command(start);
+            if (!parsed)
+            {
+                free_command(head);
+                *result = NULL;
+                return 2;
+            }
 
-			current_cmd = parsed;
-			start = next_cmd_tokens; // Continue parsing next command after pipe
-			current = next_cmd_tokens; // Correctly advance to next tokens
-		}
-		else
-			current = current->next;
-	}
+            if (!head)
+                head = parsed;
+            else
+                current_cmd->next = parsed;
 
-	if (start)
-	{
-		t_command *parsed = parse_single_command(start);
-		if (!parsed)
-		{
-			free_command(head);
-			*result = NULL;
-			return (2);
-		}
+            current_cmd = parsed;
 
-		if (!head)
-			head = parsed;
-		else
-			current_cmd->next = parsed;
-	}
+            start = next_cmd_tokens;  // continue parsing after the PIPE
+            current = next_cmd_tokens;
+        }
+        else
+            current = current->next;
+    }
 
-	*result = head;
-	return (0);
+    if (start)
+    {
+        t_command *parsed = parse_single_command(start);
+        if (!parsed)
+        {
+            free_command(head);
+            *result = NULL;
+            return 2;
+        }
+        if (!head)
+            head = parsed;
+        else
+            current_cmd->next = parsed;
+    }
+
+    *result = head;
+    return 0;
 }
+
+

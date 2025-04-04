@@ -65,7 +65,6 @@ t_command *parse_env(t_token *tokens);
 t_command *parse_exit(t_token *tokens);
 t_command *parse_single_command(t_token *tokens);
 int parse_pipeline(t_token *tokens, t_command **result);
-int	is_operator(int type);
 int parse_input_redirection(t_command *cmd, t_token **current);
 int parse_output_redirection(t_command *cmd, t_token **current);
 int	parse_heredoc(t_command *cmd, t_token **current);

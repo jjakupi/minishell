@@ -23,21 +23,19 @@ t_token	*new_token(t_token_type type, const char *value)
 
 void	add_token(t_token **head, t_token *new_tok)
 {
-	static t_token	*last = NULL;
-
 	if (!head || !new_tok)
 		return ;
 	if (!*head)
-	{
 		*head = new_tok;
-		last = new_tok;
-	}
 	else
 	{
-		last->next = new_tok;
-		last = new_tok;
+		t_token *tmp = *head;
+		while (tmp->next)
+			tmp = tmp->next;
+		tmp->next = new_tok;
 	}
 }
+
 
 void	free_tokens(t_token *head)
 {

@@ -1,28 +1,10 @@
 #include "../include/minishell.h"
-extern char **environ;
-// Simple token printing for debugging
-void print_tokens(t_token *head)
-{
-    t_token *current = head;
-    if (!current)
-    {
-        printf("No tokens to print!\n");
-        return;
-    }
-    while (current)
-    {
-        printf("Token type: %s | Value: '%s'\n",
-               token_type_to_str(current->type),
-               current->value ? current->value : "(null)");
-        current = current->next;
-    }
-}
 
 int main(void)
 {
-	char *input;
-	t_token *tokens;
-	t_command *cmds;
+	char *input = NULL;
+	t_token *tokens = NULL;
+	t_command *cmds = NULL;
 	int parse_status;
 	int last_exit_status = 0;
     (void)last_exit_status;
@@ -49,7 +31,9 @@ int main(void)
 		if (parse_status == 2 || !cmds)
 		{
 			free_tokens(tokens);
+			tokens = NULL;
 			free(input);
+			input = NULL;
 			last_exit_status = 2;
 			continue;
 		}
