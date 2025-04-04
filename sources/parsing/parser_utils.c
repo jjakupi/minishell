@@ -142,88 +142,117 @@ int	is_operator(int type)
 		|| type == REDIR_APPEND || type == HEREDOC);
 }
 
-t_command *parse_single_command(t_token *tokens)
+int parse_redirections(t_command *cmd, t_token **tokens)
+{
+    if ((*tokens)->type == REDIR_OUT && parse_output_redirection(cmd, tokens) == -1)
+        return -1;
+    if ((*tokens)->type == REDIR_APPEND && parse_append_redirection(cmd, tokens) == -1)
+        return -1;
+    if ((*tokens)->type == REDIR_IN && parse_input_redirection(cmd, tokens) == -1)
+        return -1;
+    if ((*tokens)->type == HEREDOC && parse_heredoc(cmd, tokens) == -1)
+        return -1;
+    return 0;
+}
+
+int	is_redirection(t_token_type type)
+{
+	return (type == REDIR_IN || type == REDIR_OUT || type == REDIR_APPEND || type == HEREDOC);
+}
+
+int check_syntax_errors(t_token *tokens)
 {
 	if (!tokens)
-		return NULL;
+		return (0);
 
-	t_command *cmd = NULL;
-
-	if (!strcmp(tokens->value, "cd"))
-		cmd = parse_cd(tokens);
-	else if (!strcmp(tokens->value, "export"))
-		cmd = parse_export(tokens);
-	else if (!strcmp(tokens->value, "unset"))
-		cmd = parse_unset(tokens);
-	else if (!strcmp(tokens->value, "env"))
-		cmd = parse_env(tokens);
-	else if (!strcmp(tokens->value, "exit"))
-		cmd = parse_exit(tokens);
-	else if (!strcmp(tokens->value, "echo"))
-		cmd = parse_echo(tokens);
-	else if (!strcmp(tokens->value, "pwd"))
-		cmd = parse_pwd(tokens);
-	else
+	if (tokens->type == PIPE)
 	{
-		cmd = create_command();
-		if (!cmd)
-			return NULL;
+		printf("minishell: syntax error near unexpected token `|'\n");
+		return (1);
+	}
 
-		cmd->cmd = ft_strdup(tokens->value);
-		if (!cmd->cmd)
+	while (tokens)
+	{
+		if (tokens->type == PIPE)
 		{
-			free_command(cmd);
-			return NULL;
-		}
-
-		tokens = tokens->next;
-		while (tokens)
-		{
-			if (tokens->type == REDIR_IN || tokens->type == REDIR_OUT ||
-			    tokens->type == REDIR_APPEND || tokens->type == HEREDOC)
-			{
-				if (!tokens->next)
-				{
-					printf("minishell: syntax error near unexpected token `newline'\n");
-					free_command(cmd);
-					return NULL;
-				}
-				else if (tokens->next->type == PIPE || tokens->next->type == REDIR_IN ||
-						 tokens->next->type == REDIR_OUT || tokens->next->type == REDIR_APPEND ||
-						 tokens->next->type == HEREDOC)
-				{
-					printf("minishell: syntax error near unexpected token `%s'\n", tokens->next->value);
-					free_command(cmd);
-					return NULL;
-				}
-				else
-				{
-					if ((tokens->type == REDIR_OUT && parse_output_redirection(cmd, &tokens) == -1) ||
-						(tokens->type == REDIR_APPEND && parse_append_redirection(cmd, &tokens) == -1) ||
-						(tokens->type == REDIR_IN && parse_input_redirection(cmd, &tokens) == -1) ||
-						(tokens->type == HEREDOC && parse_heredoc(cmd, &tokens) == -1))
-					{
-						free_command(cmd);
-						return NULL;
-					}
-					continue;
-				}
-			}
-			else if (tokens->type == WORD || tokens->type == ENV_VAR)
-			{
-				add_argument(cmd, tokens->value);
-				tokens = tokens->next;
-			}
-			else if (tokens->type == PIPE)
+			if (!tokens->next || tokens->next->type == PIPE)
 			{
 				printf("minishell: syntax error near unexpected token `|'\n");
-				free_command(cmd);
-				return NULL;
+				return (1);
 			}
-			else
-				tokens = tokens->next;
 		}
-		return cmd;
+		else if (is_redirection(tokens->type))
+		{
+			if (!tokens->next || tokens->next->type != WORD)
+			{
+				printf("minishell: syntax error near unexpected token `%s'\n",
+					tokens->next ? tokens->next->value : "newline");
+				return (1);
+			}
+		}
+		tokens = tokens->next;
+	}
+	return (0);
+}
+
+
+int check_next_token(t_token *current, char **value)
+{
+    if (!current->next || current->next->type != WORD)
+    {
+        fprintf(stderr, "bash: syntax error near unexpected token `%s'\n",
+                current->next ? current->next->value : "newline");
+        return -1;
+    }
+    *value = current->next->value;
+    return 0;
+}
+
+t_command *parse_single_command(t_token *tokens)
+{
+	if (!tokens || tokens->type == PIPE || is_redirection(tokens->type))
+		return NULL;
+
+	t_command *cmd = create_command();
+	if (!cmd)
+		return NULL;
+
+	cmd->cmd = ft_strdup(tokens->value);
+	if (!cmd->cmd)
+		return (free_command(cmd), NULL);
+
+	tokens = tokens->next;
+
+	while (tokens)
+	{
+		if (is_redirection(tokens->type))
+		{
+			int redir_status = -1;
+
+			if (tokens->type == REDIR_IN)
+				redir_status = parse_input_redirection(cmd, &tokens);
+			else if (tokens->type == REDIR_OUT)
+				redir_status = parse_output_redirection(cmd, &tokens);
+			else if (tokens->type == REDIR_APPEND)
+				redir_status = parse_append_redirection(cmd, &tokens);
+			else if (tokens->type == HEREDOC)
+				redir_status = parse_heredoc(cmd, &tokens);
+
+			if (redir_status == -1)
+				return (free_command(cmd), NULL);
+		}
+		else if (tokens && (tokens->type == WORD || tokens->type == ENV_VAR))
+		{
+			add_argument(cmd, tokens->value);
+			tokens = tokens->next;
+		}
+		else if (tokens && tokens->type == PIPE)
+		{
+			printf("minishell: syntax error near unexpected token `|'\n");
+			return (free_command(cmd), NULL);
+		}
+		else if (tokens)
+			tokens = tokens->next;
 	}
 
 	return cmd;
