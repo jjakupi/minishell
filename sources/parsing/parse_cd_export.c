@@ -19,12 +19,10 @@ t_command *parse_cd(t_token *tokens)
 		return NULL;
 	}
 
-	t_token *current = tokens->next; // explicitly move past "cd"
+	t_token *current = tokens->next;
 	if (!current)
 	{
-		char *home = getenv("HOME");
-		if (home)
-			add_argument(command, home);
+		add_argument(command, NULL); // explicitly handle no argument
 		return command;
 	}
 	// Explicit syntax check for redirection or pipe tokens as first argument
@@ -36,15 +34,6 @@ t_command *parse_cd(t_token *tokens)
 		free_command(command);
 		return NULL;
 	}
-
-	// Check explicitly if too many arguments
-	if (current->next)
-	{
-		printf("minishell: cd: too many arguments\n");
-		free_command(command);
-		return NULL;
-	}
-
 	add_argument(command, current->value);
 
 	return command;

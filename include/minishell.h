@@ -6,6 +6,7 @@
 #define RESET   "\001\033[0m\002"
 #define PROMPT  GREEN "Minishell:~$ " RESET
 
+# define MAX_PATH 4096
 // Standard includes
 # include <stdio.h>
 # include <stdlib.h>
@@ -62,7 +63,7 @@ typedef struct s_command
 	struct s_command	*next;
 }	t_command;
 
-//
+
 // Lexing (Tokenization) Functions
 //
 
@@ -122,6 +123,13 @@ t_command		*parse_exit(t_token *tokens);
 int				execute_builtin(t_command *cmd);
 int				builtin_exit(t_command *cmd);
 int				builtin_echo(t_command *cmd);
+int				builtin_env(t_command *cmd, char **env);
+int				builtin_pwd(t_command *cmd);
+int				builtin_cd(t_command *cmd);
+int				execute_cd_path(char *cur_pwd, char *path);
+int				change_to_old_dir(char *cur_pwd);
+int				change_dir_home(char *cur_pwd);
+int				update_directories(const char *old_pwd);
 
 //
 // Variable Expansion

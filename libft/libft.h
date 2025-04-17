@@ -6,12 +6,13 @@
 /*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/18 11:09:50 by jjakupi           #+#    #+#             */
-/*   Updated: 2024/10/18 11:10:48 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/04/17 10:36:48 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef LIBFT_H
 # define LIBFT_H
+
 # include <stdlib.h>
 # include <unistd.h>
 # include <string.h>

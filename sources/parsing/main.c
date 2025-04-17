@@ -51,7 +51,6 @@ int main(void)
 			if (cmd->has_heredoc)
 				printf("[HEREDOC]: '%s'\n", cmd->heredoc_delimiter);
 		}
-
 		if (cmds)
 			last_exit_status = execute_builtin(cmds);
 
