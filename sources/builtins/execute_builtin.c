@@ -2,6 +2,15 @@
 
 extern char **environ;
 
+int	ft_strcmp(const char *s1, const char *s2)
+{
+	while (*s1 && *s2 && (*s1 == *s2))
+	{
+		s1++;
+		s2++;
+	}
+	return ((unsigned char)*s1 - (unsigned char)*s2);
+}
 int is_builtin(char *cmd)
 {
 	return (!ft_strcmp(cmd, "echo") || !ft_strcmp(cmd, "cd") ||
@@ -23,9 +32,13 @@ int execute_builtin(t_command *cmd)
 		return (builtin_cd(cmd));
 	else if (!ft_strcmp(cmd->cmd, "pwd"))
 		return (builtin_pwd(cmd));
+	else if (!ft_strcmp(cmd->cmd, "export"))
+		return (builtin_export(cmd, &environ));
 	else if (!ft_strcmp(cmd->cmd, "env"))
 		return (builtin_env(cmd, environ));
-		
+	else if (!ft_strcmp(cmd->cmd, "unset"))
+		return (builtin_unset(cmd, &environ));
+
 	printf("minishell: %s: command not found\n", cmd->cmd);
 	return (127);
 }

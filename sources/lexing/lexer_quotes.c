@@ -1,43 +1,35 @@
 #include "../include/minishell.h"
 
-int process_quotes(const char *input, int *i, char **current_arg)
+int process_quotes(const char *input, int *i, t_token **tokens)
 {
-	char	quote;
-	char	*temp;
-	char	*new_arg;
+    char quote = input[(*i)++];    // ' or "
+    char *inner = NULL;
 
-	quote = input[(*i)++];
-	temp = NULL;
-	while (input[*i] && input[*i] != quote)
-		temp = append_char(temp, input[(*i)++]);
+    // collect up to the matching quote
+    while (input[*i] && input[*i] != quote)
+        inner = append_char(inner, input[(*i)++]);
 
-	if (input[*i] != quote)
-	{
-		free(temp);
-		return (syntax_error("unmatched quote"));
-	}
-	(*i)++;
+    // if we never saw the closer → syntax error
+    if (input[*i] != quote)
+    {
+        free(inner);
+        return syntax_error("unmatched quote");
+    }
+    (*i)++;  // skip closing quote
 
-	if (!temp)
-		temp = ft_strdup("");
+    // build a new string that still has its quotes around it
+    int len = inner ? strlen(inner) : 0;
+    char *val = malloc(len + 3);
+    if (!val) exit_with_error("malloc");
+    val[0]            = quote;
+    if (inner) memcpy(val+1, inner, len);
+    val[len+1]        = quote;
+    val[len+2]        = '\0';
+    free(inner);
 
-	if (*current_arg)
-	{
-		new_arg = ft_strjoin(*current_arg, temp);
-		if (!new_arg)
-			exit_with_error("ft_strjoin");
-		free(*current_arg);
-		*current_arg = new_arg;
-	}
-	else
-	{
-		*current_arg = ft_strdup(temp);
-		if (!*current_arg)
-			exit_with_error("ft_strdup");
-	}
-
-	free(temp);
-	return (0);
+    add_token(tokens, new_token(WORD, val));
+    free(val);
+    return 0;
 }
 
 

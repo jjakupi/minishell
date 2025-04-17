@@ -50,7 +50,11 @@ t_command *parse_export(t_token *tokens)
 
     t_command *command = create_command();
     command->cmd = strdup("export");
-
+	if (!command->cmd)
+	{
+		free_command(command);
+		return NULL;
+	}
     t_token *current = tokens->next; // Skip the "export" token
 
     while (current)

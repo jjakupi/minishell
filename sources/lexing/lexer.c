@@ -14,7 +14,10 @@ t_token	*tokenize(const char *input)
 			process_special(input, &i, &tokens, &current_arg);
 		else if (input[i] == '\'' || input[i] == '"')
 		{
-			if (process_quotes(input, &i, &current_arg))
+				// flush anything you had been building unquoted
+			flush_current_arg(&tokens, &current_arg);
+				// now grab a quoted token (with quotes preserved)
+			if (process_quotes(input, &i, &tokens))
 			{
 				free(current_arg);
 				free_tokens(tokens);

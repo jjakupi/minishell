@@ -77,7 +77,7 @@ char			*append_char(char *str, char c);
 void			flush_current_arg(t_token **tokens, char **current_arg);
 void			process_whitespace(int *i, t_token **tokens, char **current_arg);
 void			process_special(const char *input, int *i, t_token **tokens, char **current_arg);
-int				process_quotes(const char *input, int *i, char **current_arg);
+int 			process_quotes(const char *input, int *i, t_token **tokens);
 char			*extract_word(const char *input, int *index);
 char			*extract_special(const char *input, int *index);
 t_token_type	get_special_token_type(const char *op);
@@ -126,29 +126,34 @@ int				builtin_echo(t_command *cmd);
 int				builtin_env(t_command *cmd, char **env);
 int				builtin_pwd(t_command *cmd);
 int				builtin_cd(t_command *cmd);
+int				builtin_export(t_command *cmd, char ***env);
+int				builtin_unset(t_command *cmd, char ***env);
+//unset_utils.c
+int				env_len(char **env);
+int				env_idx(char **env, const char *key);
+int				env_remove_var(char ***env_ptr, const char *key);
+int				valid_unset_identifier(const char *token);
+//cd_utils
 int				execute_cd_path(char *cur_pwd, char *path);
 int				change_to_old_dir(char *cur_pwd);
 int				change_dir_home(char *cur_pwd);
 int				update_directories(const char *old_pwd);
-
-//
+//export_utils
+int				set_env_var(char ***env_ptr, const char *assignment);
+int				env_op(char **env, const char *key, int mode);
+int				is_valid_identifier_export(const char *token);
+int				cmpfunc(const void *a, const void *b);
+void			print_sorted_env(char **env);
 // Variable Expansion
-//
 
 char			*get_env_value(const char *var);
 char			*expand_argument(const char *arg, int last_exit_status);
 void			expand_command_arguments(t_command *cmd, int last_exit_status);
 
-//
 // Command Execution
-//
-
 int				execute_command(t_command *cmd);
 
-//
 // Utility Functions
-//
-
 void			exit_with_error(const char *msg);
 int				syntax_error(const char *unexpected_token);
 int				is_valid_export_token(const char *str);
@@ -158,6 +163,5 @@ int				is_numeric(const char *str);
 char			*ft_strcpy(char *dest, const char *src);
 char			*ft_strndup(const char *s, size_t n);
 int				ft_strcmp(const char *s1, const char *s2);
-char			*remove_surrounding_quotes(const char *str);
 
 #endif
