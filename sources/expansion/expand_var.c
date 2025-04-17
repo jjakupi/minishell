@@ -2,7 +2,6 @@
 
 char *expand_argument(const char *arg, int last_exit_status)
 {
-    printf("[DEBUG] BEFORE expansion: '%s'\n", arg); // debugging explicitly
     char buffer[4096] = {0};
     int i = 0, j = 0;
     int len = strlen(arg);

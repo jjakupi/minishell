@@ -77,7 +77,7 @@ char			*append_char(char *str, char c);
 void			flush_current_arg(t_token **tokens, char **current_arg);
 void			process_whitespace(int *i, t_token **tokens, char **current_arg);
 void			process_special(const char *input, int *i, t_token **tokens, char **current_arg);
-int 			process_quotes(const char *input, int *i, t_token **tokens);
+int				process_quotes(const char *input, int *i, char **current_arg);
 char			*extract_word(const char *input, int *index);
 char			*extract_special(const char *input, int *index);
 t_token_type	get_special_token_type(const char *op);

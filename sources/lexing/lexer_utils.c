@@ -67,4 +67,3 @@ char *append_char(char *str, char c)
 	return (new_str);
 }
 
-
