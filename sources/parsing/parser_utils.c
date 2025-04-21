@@ -13,6 +13,20 @@ int	has_unmatched_quotes(const char *str)
 	return (quote != 0);
 }
 
+char *remove_surrounding_quotes(const char *str)
+{
+    size_t len = strlen(str);
+    if (len >= 2 && ((str[0] == '\'' && str[len-1] == '\'')
+                   || (str[0] == '\"' && str[len-1] == '\"')))
+    {
+        char *out = malloc(len-1);
+        if (!out) return NULL;
+        memcpy(out, str+1, len-2);
+        out[len-2] = '\0';
+        return out;
+    }
+    return strdup(str);
+}
 int	is_redirection(t_token_type type)
 {
 	return (type == REDIR_IN || type == REDIR_OUT || type == REDIR_APPEND || type == HEREDOC);

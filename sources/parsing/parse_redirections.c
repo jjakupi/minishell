@@ -55,22 +55,44 @@ int parse_append_redirection(t_command *cmd, t_token **current)
 	return (0);
 }
 
-// Parsing heredoc redirection '<<'
 int parse_heredoc(t_command *cmd, t_token **current)
 {
-	char *value;
+    char *raw;
+    // 1) Get the token after '<<'
+    if (check_next_token(*current, &raw) == -1)
+        return -1;
 
-	if (check_next_token(*current, &value) == -1)
-		return (-1);
-	if (has_unmatched_quotes(value))
-		return (0);  // Bash-like silent behavior
-	if (set_redirection_file(&cmd->heredoc_delimiter, value) == -1)
-		return (-1);
-	cmd->has_heredoc = 1;
-	cmd->expand_heredoc = (value[0] != '\'' && value[0] != '"');
-	*current = (*current)->next->next;
-	return (0);
+    // 2) Strip any surrounding quotes so  '"hi"'  or  '\'hi\''
+    //    becomes  "hi"
+    char *clean = remove_surrounding_quotes(raw);
+    if (!clean)
+        return -1;  // strdup/malloc failure
+
+    // 3) If the raw token had unmatched quotes, mimic bash’s
+    //    “silent multiline” behavior and just keep going
+    if (has_unmatched_quotes(raw))
+    {
+        free(clean);
+        return 0;
+    }
+
+    // 4) Store the cleaned delimiter
+    if (set_redirection_file(&cmd->heredoc_delimiter, clean) == -1)
+    {
+        free(clean);
+        return -1;
+    }
+    free(clean);
+
+    cmd->has_heredoc    = 1;
+    // only do expansion if the user did *not* quote the delimiter
+    cmd->expand_heredoc = (raw[0] != '\'' && raw[0] != '\"');
+
+    // 5) advance past the '<<' and its argument
+    *current = (*current)->next->next;
+    return 0;
 }
+
 
 int parse_redirections(t_command *cmd, t_token **tokens)
 {

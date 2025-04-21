@@ -12,11 +12,13 @@
 # include <stdlib.h>
 # include <string.h>
 # include <ctype.h>
+# include <fcntl.h>
 # include <unistd.h>
 # include <sys/wait.h>
 # include <readline/readline.h>
 # include <readline/history.h>
 # include <signal.h>
+#include <sys/stat.h>
 # include "../../libft/libft.h"
 
 // Global signal handler variable
@@ -95,6 +97,7 @@ int				check_syntax_errors(t_token *tokens);
 int				check_next_token(t_token *current, char **value);
 int				handle_token_parsing(t_command *cmd, t_token **tokens);
 int				has_unmatched_quotes(const char *str);
+char			*remove_surrounding_quotes(const char *str);
 
 //
 // Redirection Handling
@@ -128,6 +131,7 @@ int				builtin_pwd(t_command *cmd);
 int				builtin_cd(t_command *cmd);
 int				builtin_export(t_command *cmd, char ***env);
 int				builtin_unset(t_command *cmd, char ***env);
+int				is_builtin(char *cmd);
 //unset_utils.c
 int				env_len(char **env);
 int				env_idx(char **env, const char *key);
@@ -152,7 +156,9 @@ void			expand_command_arguments(t_command *cmd, int last_exit_status);
 
 // Command Execution
 int				execute_command(t_command *cmd);
-
+int				exec_single(t_command *cmd);
+int				 exec_pipeline(t_command *head);
+int 			execute_command(t_command *cmds);
 // Utility Functions
 void			exit_with_error(const char *msg);
 int				syntax_error(const char *unexpected_token);

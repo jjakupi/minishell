@@ -53,8 +53,7 @@ int main(void)
 
         // Here you’d normally dispatch to execute_builtin() or your fork/exec logic
         if (cmds)
-            last_exit_status = execute_builtin(cmds);
-
+            last_exit_status = execute_command(cmds);
         free_command(cmds);
         free_tokens(tokens);
         free(input);

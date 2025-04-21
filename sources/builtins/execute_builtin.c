@@ -2,7 +2,7 @@
 
 extern char **environ;
 
-int	ft_strcmp(const char *s1, const char *s2)
+int ft_strcmp(const char *s1, const char *s2)
 {
 	while (*s1 && *s2 && (*s1 == *s2))
 	{
@@ -38,7 +38,5 @@ int execute_builtin(t_command *cmd)
 		return (builtin_env(cmd, environ));
 	else if (!ft_strcmp(cmd->cmd, "unset"))
 		return (builtin_unset(cmd, &environ));
-
-	printf("minishell: %s: command not found\n", cmd->cmd);
 	return (127);
 }
