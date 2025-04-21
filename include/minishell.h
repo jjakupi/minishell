@@ -156,7 +156,6 @@ void			expand_command_arguments(t_command *cmd, int last_exit_status);
 
 // Command Execution
 int				execute_command(t_command *cmd);
-int				exec_single(t_command *cmd);
 int				 exec_pipeline(t_command *head);
 int 			execute_command(t_command *cmds);
 // Utility Functions
