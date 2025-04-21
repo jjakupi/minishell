@@ -84,9 +84,7 @@ char			*extract_word(const char *input, int *index);
 char			*extract_special(const char *input, int *index);
 t_token_type	get_special_token_type(const char *op);
 
-//
 // Parsing Functions
-//
 
 t_command		*parse_single_command(t_token *tokens);
 int				parse_pipeline(t_token *tokens, t_command **result);

@@ -25,10 +25,10 @@ int	env_idx(char **env, const char *key)
 	int		key_len;
 
 	i = 0;
-	key_len = (int)strlen(key);
+	key_len = (int)ft_strlen(key);
 	while (env[i])
 	{
-		if (strncmp(env[i], key, key_len) == 0 &&
+		if (ft_strncmp(env[i], key, key_len) == 0 &&
 			(env[i][key_len] == '=' || env[i][key_len] == '\0'))
 			return (i);
 		i++;
