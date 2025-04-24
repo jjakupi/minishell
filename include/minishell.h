@@ -1,12 +1,24 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   minishell.h                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/24 13:56:55 by julrusse          #+#    #+#             */
+/*   Updated: 2025/04/24 14:04:39 by julrusse         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef MINISHELL_H
 # define MINISHELL_H
 
 // Terminal prompt color definitions
-#define GREEN   "\001\033[1;32m\002"
-#define RESET   "\001\033[0m\002"
-#define PROMPT  GREEN "Minishell:~$ " RESET
-
+# define GREEN "\001\033[1;32m\002"
+# define RESET "\001\033[0m\002"
+# define PROMPT GREEN "Minishell:~$ " RESET
 # define MAX_PATH 4096
+
 // Standard includes
 # include <stdio.h>
 # include <stdlib.h>
@@ -22,11 +34,7 @@
 # include "../libft/libft.h"
 
 // Global signal handler variable
-extern volatile sig_atomic_t g_signal;
-
-//
-// Core Structures
-//
+extern volatile sig_atomic_t	g_signal;
 
 // Token types
 typedef enum e_token_type
@@ -65,10 +73,7 @@ typedef struct s_command
 	struct s_command	*next;
 }	t_command;
 
-
 // Lexing (Tokenization) Functions
-//
-
 t_token			*tokenize(const char *input);
 t_token			*new_token(t_token_type type, const char *value);
 void			add_token(t_token **head, t_token *new_tok);
@@ -77,17 +82,16 @@ int				is_whitespace(char c);
 int				is_special(char c);
 char			*append_char(char *str, char c);
 void			flush_current_arg(t_token **tokens, char **current_arg);
-void			process_whitespace(int *i, t_token **tokens, char **current_arg);
-void			process_special(const char *input, int *i, t_token **tokens, char **current_arg);
+void			process_whitespace(int *i, t_token **tokens,
+					char **current_arg);
+void			process_special(const char *input, int *i, t_token **tokens,
+					char **current_arg);
 int				process_quotes(const char *input, int *i, char **current_arg);
 char			*extract_word(const char *input, int *index);
 char			*extract_special(const char *input, int *index);
 t_token_type	get_special_token_type(const char *op);
 
-//
 // Parsing Functions
-//
-
 t_command		*parse_single_command(t_token *tokens);
 int				parse_pipeline(t_token *tokens, t_command **result);
 t_command		*create_command(void);
@@ -99,10 +103,7 @@ int				handle_token_parsing(t_command *cmd, t_token **tokens);
 int				has_unmatched_quotes(const char *str);
 char			*remove_surrounding_quotes(const char *str);
 
-//
 // Redirection Handling
-//
-
 int				is_redirection(t_token_type type);
 int				parse_redirections(t_command *cmd, t_token **tokens);
 int				parse_input_redirection(t_command *cmd, t_token **current);
@@ -111,10 +112,7 @@ int				parse_append_redirection(t_command *cmd, t_token **current);
 int				parse_heredoc(t_command *cmd, t_token **current);
 int				set_redirection_file(char **dest, char *src);
 
-//
 // Built-in Commands
-//
-
 t_command		*parse_echo(t_token *tokens);
 t_command		*parse_cd(t_token *tokens);
 t_command		*parse_pwd(t_token *tokens);
@@ -132,17 +130,20 @@ int				builtin_cd(t_command *cmd, char ***env);
 int				builtin_export(t_command *cmd, char ***env);
 int				builtin_unset(t_command *cmd, char ***env);
 int				is_builtin(char *cmd);
-//unset_utils.c
+
+//unset Utils
 int				env_len(char **env);
 int				env_idx(char **env, const char *key);
 int				env_remove_var(char ***env_ptr, const char *key);
 int				valid_unset_identifier(const char *token);
-//cd_utils
+
+//cd Utils
 int				execute_cd_path(char *cur_pwd, char *path, char ***env);
 int				change_to_old_dir(char *cur_pwd, char ***env);
 int				change_dir_home(char *cur_pwd, char ***env);
 int				update_directories(const char *old_pwd, char ***env);
-//export_utils
+
+//export Utils
 int				env_op(char **env, const char *key, int mode);
 int				is_valid_identifier_export(const char *token);
 int				cmpfunc(const void *a, const void *b);
@@ -154,21 +155,23 @@ void			extract_key(const char *assignment, char *key);
 int				add_entry(char ***env_ptr, const char *entry);
 int				update_entry(char **env, int idx, const char *assignment);
 int				set_env_var(char ***env_ptr, const char *assignment);
+
 // Variable Expansion
 char			*get_env_value(const char *var);
 char			*expand_argument(const char *arg, int last_exit_status);
 void			expand_command_arguments(t_command *cmd, int last_exit_status);
+
 // Command Execution
 int				execute_command(t_command *cmd);
-int				 exec_pipeline(t_command *head);
-int 			execute_command(t_command *cmds);
+int				exec_pipeline(t_command *head);
+int				execute_command(t_command *cmds);
+
 // Utility Functions
 void			exit_with_error(const char *msg);
 int				syntax_error(const char *unexpected_token);
 int				is_valid_export_token(const char *str);
 int				is_valid_identifier(const char *str);
 int				is_numeric(const char *str);
-
 char			*ft_strcpy(char *dest, const char *src);
 char			*ft_strndup(const char *s, size_t n);
 int				ft_strcmp(const char *s1, const char *s2);

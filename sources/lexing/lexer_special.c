@@ -2,11 +2,34 @@
 
 void process_special(const char *input, int *i, t_token **tokens, char **current_arg)
 {
-	flush_current_arg(tokens, current_arg);
-	char *spec = extract_special(input, i);
-	add_token(tokens, new_token(get_special_token_type(spec), spec));
-	free(spec);
+    // 1) finish any in-flight word
+    flush_current_arg(tokens, current_arg);
+
+    // 2) two-char operators
+    if (input[*i] == '<' && input[*i+1] == '<') {
+        add_token(tokens, new_token(HEREDOC, "<<"));
+        *i += 2;
+    }
+    else if (input[*i] == '>' && input[*i+1] == '>') {
+        add_token(tokens, new_token(REDIR_APPEND, ">>"));
+        *i += 2;
+    }
+    // 3) single-char operators
+    else if (input[*i] == '<') {
+        add_token(tokens, new_token(REDIR_IN, "<"));
+        (*i)++;
+    }
+    else if (input[*i] == '>') {
+        add_token(tokens, new_token(REDIR_OUT, ">"));
+        (*i)++;
+    }
+    else if (input[*i] == '|') {
+        add_token(tokens, new_token(PIPE, "|"));
+        (*i)++;
+    }
+    // 4) (if you ever add more operators, handle them here)
 }
+
 
 char *extract_special(const char *input, int *index)
 {

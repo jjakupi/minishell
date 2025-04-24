@@ -2,7 +2,17 @@
 
 extern char **environ;
 
-// 1) Find an executable on $PATH
+void minishell_perror(const char *what)
+{
+    const char *msg = strerror(errno);
+    write(2, "minishell: ", 11);
+    write(2, what, strlen(what));
+    write(2, ": ", 2);
+    write(2, msg, strlen(msg));
+    write(2, "\n", 1);
+}
+
+// 1) Find an executable on $PATHmini
 static char *find_executable(const char *name)
 {
     char *path_env = getenv("PATH");
@@ -22,70 +32,54 @@ static char *find_executable(const char *name)
     return NULL;
 }
 
-// 2) In a child, set up heredoc & file redirections, then exec one command
+#include <sys/stat.h>
+#include <errno.h>
+// … other includes …
+
 static void child_exec_one(t_command *cmd)
 {
-    // -- heredoc first --
-    if (cmd->has_heredoc)
-    {
-        int hpipe[2];
-        pipe(hpipe);
-        for (;;)
-        {
-            char *line = readline("> ");
-            if (!line || strcmp(line, cmd->heredoc_delimiter) == 0)
-            {
-                free(line);
-                break;
-            }
-            write(hpipe[1], line, strlen(line));
-            write(hpipe[1], "\n", 1);
-            free(line);
-        }
-        close(hpipe[1]);
-        dup2(hpipe[0], STDIN_FILENO);
-        close(hpipe[0]);
-    }
+    // … your existing heredoc + redir + builtin handling …
 
-    // -- file redirections --
-    if (cmd->input_file)
-    {
-        int in = open(cmd->input_file, O_RDONLY);
-        if (in < 0) { perror(cmd->input_file); exit(1); }
-        dup2(in, STDIN_FILENO);
-        close(in);
-    }
-    if (cmd->output_file)
-    {
-        int flags = cmd->append_mode
-            ? (O_WRONLY | O_CREAT | O_APPEND)
-            : (O_WRONLY | O_CREAT | O_TRUNC);
-        int out = open(cmd->output_file, flags, 0644);
-        if (out < 0) { perror(cmd->output_file); exit(1); }
-        dup2(out, STDOUT_FILENO);
-        close(out);
-    }
-
-    // -- built‑in? (only if it’s a standalone, no next) --
-    if (is_builtin(cmd->cmd) && !cmd->next)
-        exit(execute_builtin(cmd));
-
-    // -- external: build argv and execve --
+    // build argv[]
     char **argv = calloc(cmd->arg_count + 2, sizeof(char *));
     argv[0] = cmd->cmd;
     for (int i = 0; i < cmd->arg_count; i++)
         argv[i+1] = cmd->args[i];
+    argv[cmd->arg_count+1] = NULL;
 
-    char *path = find_executable(cmd->cmd);
-    if (!path)
-    {
-        fprintf(stderr, "minishell: %s: command not found\n", cmd->cmd);
-        exit(127);
+    // pick a path
+    char *path;
+    if (strchr(cmd->cmd, '/')) {
+        path = cmd->cmd;
+    } else {
+        path = find_executable(cmd->cmd);
+        if (!path) {
+            write(2, "minishell: ", 11);
+            write(2, cmd->cmd, strlen(cmd->cmd));
+            write(2, ": command not found\n", 20);
+            exit(127);
+        }
     }
+
+    // ←– INSERTED: check for directory
+    struct stat st;
+    if (stat(path, &st) == 0 && S_ISDIR(st.st_mode)) {
+        write(2, "minishell: ", 11);
+        write(2, cmd->cmd, strlen(cmd->cmd));
+        write(2, ": Is a directory\n", 17);
+        exit(126);
+    }
+
+    // now do the real execve
     execve(path, argv, environ);
-    perror("execve");
-    exit(126);
+
+    // if execve() returns, it failed for some other reason
+    perror(cmd->cmd);
+    exit(errno == EACCES ? 126 : 127);
 }
+
+
+
 
 // 3) Chain N>1 commands into a pipeline
 int exec_pipeline(t_command *head)
@@ -133,7 +127,7 @@ int exec_pipeline(t_command *head)
 static int exec_single(t_command *cmd)
 {
     pid_t pid = fork();
-    if (pid < 0)      { perror("fork"); return 1; }
+    if (pid < 0)      { minishell_perror("fork"); return 1; }
     if (pid == 0)     child_exec_one(cmd);
     int status = 0;
     waitpid(pid, &status, 0);
@@ -149,7 +143,7 @@ int execute_command(t_command *cmd)
     if (cmd->input_file) {
         saved_in = dup(STDIN_FILENO);
         int in = open(cmd->input_file, O_RDONLY);
-        if (in < 0) { perror(cmd->input_file); return 1; }
+        if (in < 0) { minishell_perror(cmd->input_file); return 1; }
         dup2(in, STDIN_FILENO);
         close(in);
     }
@@ -161,7 +155,7 @@ int execute_command(t_command *cmd)
             ? (O_WRONLY|O_CREAT|O_APPEND)
             : (O_WRONLY|O_CREAT|O_TRUNC);
         int out = open(cmd->output_file, flags, 0644);
-        if (out < 0) { perror(cmd->output_file); return 1; }
+        if (out < 0) { minishell_perror(cmd->output_file); return 1; }
         dup2(out, STDOUT_FILENO);
         close(out);
     }

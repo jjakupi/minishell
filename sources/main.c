@@ -1,8 +1,25 @@
-// main.c
 #include "../include/minishell.h"
 
-// main.c
-#include "../include/minishell.h"
+static void fix_empty_cmd(t_command *c)
+{
+    if (c->cmd[0] == '\0' && c->arg_count > 0)
+    {
+        /* 1) free the bogus empty cmd, grab args[0] as the real cmd */
+        free(c->cmd);
+        c->cmd = strdup(c->args[0]);
+
+        /* 2) slide everything else down one slot */
+        for (int i = 1; i < c->arg_count; i++)
+            c->args[i-1] = c->args[i];
+
+        /* 3) shrink the args[] array and NULL-terminate it */
+        c->arg_count--;
+        c->args = realloc(c->args, (c->arg_count + 1) * sizeof *c->args);
+        if (!c->args && c->arg_count > 0)
+            exit_with_error("realloc");
+        c->args[c->arg_count] = NULL;
+    }
+}
 
 int main(void)
 {
@@ -33,6 +50,8 @@ int main(void)
         // Expand vars now that parsing is done
         for (t_command *c = cmds; c; c = c->next)
             expand_command_arguments(c, last_exit_status);
+        for (t_command *c = cmds; c; c = c->next)
+            fix_empty_cmd(c);
 
         // Actually run it (no more debug‐prints)
         last_exit_status = execute_command(cmds);
