@@ -29,7 +29,7 @@ int execute_builtin(t_command *cmd)
 	else if (!ft_strcmp(cmd->cmd, "exit"))
 		return (builtin_exit(cmd));
 	else if (!ft_strcmp(cmd->cmd, "cd"))
-		return (builtin_cd(cmd));
+		return (builtin_cd(cmd, &environ));
 	else if (!ft_strcmp(cmd->cmd, "pwd"))
 		return (builtin_pwd(cmd));
 	else if (!ft_strcmp(cmd->cmd, "export"))

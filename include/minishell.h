@@ -146,20 +146,18 @@ int				update_directories(const char *old_pwd, char ***env);
 int				env_op(char **env, const char *key, int mode);
 int				is_valid_identifier_export(const char *token);
 int				cmpfunc(const void *a, const void *b);
-char		**copy_env(char **env);
-void		sort_env(char **arr);
-void		print_entry(const char *var);
+char			**copy_env(char **env);
+void			sort_env(char **arr);
+void			print_entry(const char *var);
 void			print_sorted_env(char **env);
-void		extract_key(const char *assignment, char *key);
+void			extract_key(const char *assignment, char *key);
 int				add_entry(char ***env_ptr, const char *entry);
 int				update_entry(char **env, int idx, const char *assignment);
 int				set_env_var(char ***env_ptr, const char *assignment);
 // Variable Expansion
-
 char			*get_env_value(const char *var);
 char			*expand_argument(const char *arg, int last_exit_status);
 void			expand_command_arguments(t_command *cmd, int last_exit_status);
-
 // Command Execution
 int				execute_command(t_command *cmd);
 int				 exec_pipeline(t_command *head);

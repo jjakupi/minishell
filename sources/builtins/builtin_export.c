@@ -6,7 +6,7 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:08:44 by julrusse          #+#    #+#             */
-/*   Updated: 2025/04/24 12:20:46 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/04/24 13:19:50 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,19 +29,31 @@ void	extract_key(const char *assignment, char *key)
 
 int	add_entry(char ***env_ptr, const char *entry)
 {
-	char	**env;
+	char	**old_env;
+	char	**new_env;
 	int		n;
+	int		i;
 
-	env = *env_ptr;
-	n = env_op(env, NULL, 0);
-	env = realloc(env, (n + 2) * sizeof(char *));
-	if (!env)
+	old_env = *env_ptr;
+	n = env_op(old_env, NULL, 0);
+	new_env = malloc((n + 2) * sizeof(char *));
+	if (new_env == NULL)
 		return (1);
-	env[n] = ft_strdup(entry);
-	if (!env[n])
+	i = 0;
+	while (i < n)
+	{
+		new_env[i] = old_env[i];
+		i++;
+	}
+	new_env[n] = ft_strdup(entry);
+	if (new_env[n] == NULL)
+	{
+		free(new_env);
 		return (1);
-	env[n + 1] = NULL;
-	*env_ptr = env;
+	}
+	new_env[n + 1] = NULL;
+	free(old_env);
+	*env_ptr = new_env;
 	return (0);
 }
 
@@ -52,7 +64,6 @@ int	update_entry(char **env, int idx, const char *assignment)
 	new = ft_strdup(assignment);
 	if (!new)
 		return (1);
-	free(env[idx]);
 	env[idx] = new;
 	return (0);
 }
