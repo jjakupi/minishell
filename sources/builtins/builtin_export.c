@@ -1,106 +1,108 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   builtin_export.c                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/24 12:08:44 by julrusse          #+#    #+#             */
+/*   Updated: 2025/04/24 12:20:46 by julrusse         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/minishell.h"
 
-/*
-** set_env_var:
-**   Adds or updates a variable in the environment.
-**   'assignment' is of the form "KEY=VALUE" or "KEY". In the latter case,
-**   the variable is added with an empty value.
-*/
-int set_env_var(char ***env_ptr, const char *assignment)
+void	extract_key(const char *assignment, char *key)
 {
-	char **env;
-	char *eq;
-	char key[256];
-	int key_len;
-	int idx;
+	int		len;
+	char	*eq;
+
+	eq = ft_strchr(assignment, '=');
+	if (eq)
+		len = eq - assignment;
+	else
+		len = ft_strlen(assignment);
+	if (len > 255)
+		len = 255;
+	ft_strlcpy(key, assignment, len + 1);
+}
+
+int	add_entry(char ***env_ptr, const char *entry)
+{
+	char	**env;
+	int		n;
 
 	env = *env_ptr;
-	eq = strchr(assignment, '=');
-	if (eq)
-		key_len = eq - assignment;
-	else
-		key_len = strlen(assignment);
-	if (key_len >= (int)sizeof(key))
-		key_len = sizeof(key) - 1;
-	strncpy(key, assignment, key_len);
-	key[key_len] = '\0';
+	n = env_op(env, NULL, 0);
+	env = realloc(env, (n + 2) * sizeof(char *));
+	if (!env)
+		return (1);
+	env[n] = ft_strdup(entry);
+	if (!env[n])
+		return (1);
+	env[n + 1] = NULL;
+	*env_ptr = env;
+	return (0);
+}
+
+int	update_entry(char **env, int idx, const char *assignment)
+{
+	char	*new;
+
+	new = ft_strdup(assignment);
+	if (!new)
+		return (1);
+	free(env[idx]);
+	env[idx] = new;
+	return (0);
+}
+
+int	set_env_var(char ***env_ptr, const char *assignment)
+{
+	char	*eq;
+	char	key[256];
+	char	**env;
+	int		idx;
+
+	env = *env_ptr;
+	eq = ft_strchr(assignment, '=');
+	extract_key(assignment, key);
 	idx = env_op(env, key, 1);
 	if (!eq)
 	{
 		if (idx == -1)
-		{
-			int count;
-
-			count = env_op(env, NULL, 0);
-			env = realloc(env, (count + 2) * sizeof(char *));
-			if (!env)
-				return (1);
-			env[count] = malloc(key_len + 2);
-			if (!env[count])
-				return (1);
-			strcpy(env[count], key);
-			strcat(env[count], "=");
-			env[count + 1] = NULL;
-			*env_ptr = env;
-		}
+			return (add_entry(env_ptr, key));
+		return (0);
 	}
-	else
-	{
-		char *new_entry;
-		int count;
-
-		new_entry = strdup(assignment);
-		if (!new_entry)
-			return (1);
-		if (idx != -1)
-		{
-			free(env[idx]);
-			env[idx] = new_entry;
-		}
-		else
-		{
-			count = env_op(env, NULL, 0);
-			env = realloc(env, (count + 2) * sizeof(char *));
-			if (!env)
-			{
-				free(new_entry);
-				return (1);
-			}
-			env[count] = new_entry;
-			env[count + 1] = NULL;
-			*env_ptr = env;
-		}
-	}
-	return (0);
+	if (idx != -1)
+		return (update_entry(env, idx, assignment));
+	return (add_entry(env_ptr, assignment));
 }
 
-int builtin_export(t_command *cmd, char ***env)
+int	builtin_export(t_command *cmd, char ***env)
 {
-    int ret = 0;
+	int	i;
+	int	status;
 
-    // No arguments → print all environment variables
-    if (cmd->arg_count == 0)
-    {
-        print_sorted_env(*env);
-        return 0;
-    }
-
-    // For each argument (0 through arg_count-1), validate and export
-    for (int i = 0; i < cmd->arg_count; i++)
-    {
-        char *arg = cmd->args[i];
-
-        if (!is_valid_export_token(arg))
-        {
-            fprintf(stderr, "export: `%s': not a valid identifier\n", arg);
-            ret = 1;
-        }
-        else if (set_env_var(env, arg) != 0)
-        {
-            // set_env_var failed (e.g. malloc failure)
-            ret = 1;
-        }
-    }
-    return ret;
+	status = 0;
+	if (cmd->arg_count == 0)
+	{
+		print_sorted_env(*env);
+		return (0);
+	}
+	i = 0;
+	while (i < cmd->arg_count)
+	{
+		if (!is_valid_export_token(cmd->args[i]))
+		{
+			ft_putstr_fd("export: `", 2);
+			ft_putstr_fd(cmd->args[i], 2);
+			ft_putendl_fd("': not a valid identifier", 2);
+			status = 1;
+		}
+		else if (set_env_var(env, cmd->args[i]) != 0)
+			status = 1;
+		i++;
+	}
+	return (status);
 }
-

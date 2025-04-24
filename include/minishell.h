@@ -143,11 +143,17 @@ int				change_to_old_dir(char *cur_pwd, char ***env);
 int				change_dir_home(char *cur_pwd, char ***env);
 int				update_directories(const char *old_pwd, char ***env);
 //export_utils
-int				set_env_var(char ***env_ptr, const char *assignment);
 int				env_op(char **env, const char *key, int mode);
 int				is_valid_identifier_export(const char *token);
 int				cmpfunc(const void *a, const void *b);
+char		**copy_env(char **env);
+void		sort_env(char **arr);
+void		print_entry(const char *var);
 void			print_sorted_env(char **env);
+void		extract_key(const char *assignment, char *key);
+int				add_entry(char ***env_ptr, const char *entry);
+int				update_entry(char **env, int idx, const char *assignment);
+int				set_env_var(char ***env_ptr, const char *assignment);
 // Variable Expansion
 
 char			*get_env_value(const char *var);

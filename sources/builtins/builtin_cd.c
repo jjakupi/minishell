@@ -6,7 +6,7 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 15:17:31 by julrusse          #+#    #+#             */
-/*   Updated: 2025/04/21 16:06:05 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/04/24 11:51:22 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,9 +26,9 @@ int	builtin_cd(t_command *cmd, char ***env)
 		perror("cd: getcwd error");
 		return (EXIT_FAILURE);
 	}
-	if (cmd->arg_count == 0 || strcmp(cmd->args[0], "~") == 0)
+	if (cmd->arg_count == 0 || ft_strcmp(cmd->args[0], "~") == 0)
 		return (change_dir_home(cwd, env));
-	else if (strcmp(cmd->args[0], "-") == 0)
+	else if (ft_strcmp(cmd->args[0], "-") == 0)
 		return (change_to_old_dir(cwd, env));
 	else if (cmd->args[0][0] == '\0')
 	{
