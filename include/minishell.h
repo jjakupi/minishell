@@ -18,8 +18,8 @@
 # include <readline/readline.h>
 # include <readline/history.h>
 # include <signal.h>
-#include <sys/stat.h>
-# include "../../libft/libft.h"
+# include <sys/stat.h>
+# include "../libft/libft.h"
 
 // Global signal handler variable
 extern volatile sig_atomic_t g_signal;
@@ -84,7 +84,9 @@ char			*extract_word(const char *input, int *index);
 char			*extract_special(const char *input, int *index);
 t_token_type	get_special_token_type(const char *op);
 
+//
 // Parsing Functions
+//
 
 t_command		*parse_single_command(t_token *tokens);
 int				parse_pipeline(t_token *tokens, t_command **result);
@@ -126,7 +128,7 @@ int				builtin_exit(t_command *cmd);
 int				builtin_echo(t_command *cmd);
 int				builtin_env(t_command *cmd, char **env);
 int				builtin_pwd(t_command *cmd);
-int				builtin_cd(t_command *cmd);
+int				builtin_cd(t_command *cmd, char ***env);
 int				builtin_export(t_command *cmd, char ***env);
 int				builtin_unset(t_command *cmd, char ***env);
 int				is_builtin(char *cmd);
@@ -136,10 +138,10 @@ int				env_idx(char **env, const char *key);
 int				env_remove_var(char ***env_ptr, const char *key);
 int				valid_unset_identifier(const char *token);
 //cd_utils
-int				execute_cd_path(char *cur_pwd, char *path);
-int				change_to_old_dir(char *cur_pwd);
-int				change_dir_home(char *cur_pwd);
-int				update_directories(const char *old_pwd);
+int				execute_cd_path(char *cur_pwd, char *path, char ***env);
+int				change_to_old_dir(char *cur_pwd, char ***env);
+int				change_dir_home(char *cur_pwd, char ***env);
+int				update_directories(const char *old_pwd, char ***env);
 //export_utils
 int				set_env_var(char ***env_ptr, const char *assignment);
 int				env_op(char **env, const char *key, int mode);

@@ -5,15 +5,6 @@ extern char **environ;
 // 1) Find an executable on $PATH
 static char *find_executable(const char *name)
 {
-    // if it contains a slash, treat it as a path
-    if (strchr(name, '/')) {
-        if (access(name, X_OK) == 0)
-            return strdup(name);
-        else
-            return NULL;
-    }
-
-    // otherwise search each directory in PATH
     char *path_env = getenv("PATH");
     if (!path_env) return NULL;
     char *paths = strdup(path_env);

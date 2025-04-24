@@ -1,20 +1,17 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   builtin_env.c                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/21 15:35:52 by julrusse          #+#    #+#             */
+/*   Updated: 2025/04/21 15:35:54 by julrusse         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/minishell.h"
 
-/*
-** builtin_env:
-**   Affiche toutes les variables d'environnement, une par ligne.
-**   Si la commande 'env' reçoit un argument (autre que "env"), affiche une
-**   erreur et retourne EXIT_FAILURE.
-**
-** Paramètres :
-**   - cmd : structure t_command contenant la commande et ses arguments.
-**           (cmd->args[0] est "env"; aucune autre argument n'est attendu)
-**   - env : tableau de chaînes représentant l'environnement.
-**
-** Retourne :
-**   - EXIT_SUCCESS si l'affichage a réussi,
-**   - EXIT_FAILURE si un argument inattendu est présent.
-*/
 int	builtin_env(t_command *cmd, char **env)
 {
 	int	i;
