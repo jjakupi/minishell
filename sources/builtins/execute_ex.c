@@ -12,7 +12,7 @@ void minishell_perror(const char *what)
     write(2, "\n", 1);
 }
 
-// 1) Find an executable on $PATHmini
+// 1) Find an executable on $PATH
 static char *find_executable(const char *name)
 {
     char *path_env = getenv("PATH");
@@ -32,68 +32,122 @@ static char *find_executable(const char *name)
     return NULL;
 }
 
-#include <sys/stat.h>
-#include <errno.h>
-// … other includes …
-
+// child_exec_one: sets up redirections, builtins, external exec
 static void child_exec_one(t_command *cmd)
 {
-    // … your existing heredoc + redir + builtin handling …
+    // empty command => succeed without doing anything
+    if (cmd->cmd[0] == '\0')
+        _exit(0);
 
-    // build argv[]
-    char **argv = calloc(cmd->arg_count + 2, sizeof(char *));
+    // heredoc handling
+    if (cmd->has_heredoc)
+    {
+        int hpipe[2];
+        pipe(hpipe);
+        for (;;)
+        {
+            char *line = readline("> ");
+            if (!line || strcmp(line, cmd->heredoc_delimiter) == 0)
+            {
+                free(line);
+                break;
+            }
+            write(hpipe[1], line, strlen(line));
+            write(hpipe[1], "\n", 1);
+            free(line);
+        }
+        close(hpipe[1]);
+        dup2(hpipe[0], STDIN_FILENO);
+        close(hpipe[0]);
+    }
+
+    // input redirection
+    if (cmd->input_file)
+    {
+        int in = open(cmd->input_file, O_RDONLY);
+        if (in < 0) { minishell_perror(cmd->input_file); _exit(1); }
+        dup2(in, STDIN_FILENO);
+        close(in);
+    }
+    // output/append redirection
+    if (cmd->output_file)
+    {
+        int flags = cmd->append_mode
+            ? (O_WRONLY | O_CREAT | O_APPEND)
+            : (O_WRONLY | O_CREAT | O_TRUNC);
+        int out = open(cmd->output_file, flags, 0644);
+        if (out < 0) { minishell_perror(cmd->output_file); _exit(1); }
+        dup2(out, STDOUT_FILENO);
+        close(out);
+    }
+
+    // builtin inline if standalone (no pipeline)
+    if (is_builtin(cmd->cmd) && !cmd->next)
+        _exit(execute_builtin(cmd));
+
+    // build argv
+    char **argv = calloc(cmd->arg_count + 2, sizeof *argv);
     argv[0] = cmd->cmd;
     for (int i = 0; i < cmd->arg_count; i++)
         argv[i+1] = cmd->args[i];
     argv[cmd->arg_count+1] = NULL;
 
-    // pick a path
+    // determine exec path
     char *path;
-    if (strchr(cmd->cmd, '/')) {
+    if (strchr(cmd->cmd, '/'))
+    {
         path = cmd->cmd;
-    } else {
+        if (access(path, F_OK) != 0)
+        {
+            minishell_perror(path);
+            _exit(127);
+        }
+    }
+    else
+    {
         path = find_executable(cmd->cmd);
-        if (!path) {
+        if (!path)
+        {
             write(2, "minishell: ", 11);
             write(2, cmd->cmd, strlen(cmd->cmd));
             write(2, ": command not found\n", 20);
-            exit(127);
+            _exit(127);
         }
     }
 
-    // ←– INSERTED: check for directory
+    // directory check
     struct stat st;
-    if (stat(path, &st) == 0 && S_ISDIR(st.st_mode)) {
+    if (stat(path, &st) == 0 && S_ISDIR(st.st_mode))
+    {
         write(2, "minishell: ", 11);
         write(2, cmd->cmd, strlen(cmd->cmd));
         write(2, ": Is a directory\n", 17);
-        exit(126);
+        _exit(126);
     }
 
-    // now do the real execve
+    // exec
     execve(path, argv, environ);
-
-    // if execve() returns, it failed for some other reason
-    perror(cmd->cmd);
-    exit(errno == EACCES ? 126 : 127);
+    minishell_perror(cmd->cmd);
+    if (errno == EACCES || errno == EISDIR)
+        _exit(126);
+    else
+        _exit(127);
 }
 
-
-
-
-// 3) Chain N>1 commands into a pipeline
+// exec_pipeline: forks children for each pipeline stage
 int exec_pipeline(t_command *head)
 {
     t_command *c = head;
-    int in_fd = STDIN_FILENO, n = 0;
+    int in_fd = STDIN_FILENO;
     pid_t pids[64];
+    int n = 0;
 
-    // for all but last, fork + pipe
-    for (; c->next; c = c->next, n++)
+    for (; c->next; c = c->next)
     {
         int fds[2];
         pipe(fds);
-        if ((pids[n] = fork()) == 0)
+        pids[n] = fork();
+        if (pids[n] == 0)
         {
             dup2(in_fd, STDIN_FILENO);
             dup2(fds[1], STDOUT_FILENO);
@@ -104,18 +158,19 @@ int exec_pipeline(t_command *head)
         close(fds[1]);
         if (in_fd != STDIN_FILENO) close(in_fd);
         in_fd = fds[0];
+        n++;
     }
-
-    // last command
-    if ((pids[n++] = fork()) == 0)
+    // last stage
+    pids[n] = fork();
+    if (pids[n] == 0)
     {
         dup2(in_fd, STDIN_FILENO);
         if (in_fd != STDIN_FILENO) close(in_fd);
         child_exec_one(c);
     }
     if (in_fd != STDIN_FILENO) close(in_fd);
+    n++;
 
-    // wait all, return the last exit status
     int status = 0;
     for (int i = 0; i < n; i++)
         waitpid(pids[i], &status, 0);
@@ -123,54 +178,58 @@ int exec_pipeline(t_command *head)
     return WIFEXITED(status) ? WEXITSTATUS(status) : 1;
 }
 
-// 2½) A little helper for the “no‑pipeline, external” case
+// exec_single: for a lone external command
 static int exec_single(t_command *cmd)
 {
     pid_t pid = fork();
-    if (pid < 0)      { minishell_perror("fork"); return 1; }
-    if (pid == 0)     child_exec_one(cmd);
+    if (pid < 0)  { minishell_perror("fork"); return 1; }
+    if (pid == 0) child_exec_one(cmd);
     int status = 0;
     waitpid(pid, &status, 0);
     return WIFEXITED(status) ? WEXITSTATUS(status) : 1;
 }
 
-// 4) Top‑level dispatcher (in your parent shell)
+// execute_command: dispatch, but only the parent handles standalone builtins’ redirects
 int execute_command(t_command *cmd)
 {
-    int saved_in  = -1, saved_out = -1, status;
+    int saved_in = -1, saved_out = -1;
+    int status;
+    bool pipeline           = (cmd->next != NULL);
+    bool standalone_builtin = (!pipeline && is_builtin(cmd->cmd));
 
-    // apply < redirection in the parent
-    if (cmd->input_file) {
-        saved_in = dup(STDIN_FILENO);
-        int in = open(cmd->input_file, O_RDONLY);
-        if (in < 0) { minishell_perror(cmd->input_file); return 1; }
-        dup2(in, STDIN_FILENO);
-        close(in);
+    if (standalone_builtin)
+    {
+        if (cmd->input_file)
+        {
+            int in = open(cmd->input_file, O_RDONLY);
+            if (in < 0) return (minishell_perror(cmd->input_file), 1);
+            saved_in = dup(STDIN_FILENO);
+            dup2(in, STDIN_FILENO);
+            close(in);
+        }
+        if (cmd->output_file)
+        {
+            int flags = cmd->append_mode
+                      ? (O_WRONLY|O_CREAT|O_APPEND)
+                      : (O_WRONLY|O_CREAT|O_TRUNC);
+            int out = open(cmd->output_file, flags, 0644);
+            if (out < 0) return (minishell_perror(cmd->output_file), 1);
+            saved_out = dup(STDOUT_FILENO);
+            dup2(out, STDOUT_FILENO);
+            close(out);
+        }
+        status = execute_builtin(cmd);
+        if (saved_in  >= 0) { dup2(saved_in,  STDIN_FILENO);  close(saved_in);  }
+        if (saved_out >= 0) { dup2(saved_out, STDOUT_FILENO); close(saved_out); }
+        return status;
     }
 
-    // apply > / >> redirection in the parent
-    if (cmd->output_file) {
-        saved_out = dup(STDOUT_FILENO);
-        int flags = cmd->append_mode
-            ? (O_WRONLY|O_CREAT|O_APPEND)
-            : (O_WRONLY|O_CREAT|O_TRUNC);
-        int out = open(cmd->output_file, flags, 0644);
-        if (out < 0) { minishell_perror(cmd->output_file); return 1; }
-        dup2(out, STDOUT_FILENO);
-        close(out);
-    }
-
-    // dispatch
-    if (cmd->next)
+    if (pipeline)
         status = exec_pipeline(cmd);
     else if (is_builtin(cmd->cmd))
-        status = execute_builtin(cmd);
+        status = exec_single(cmd);  // fork for builtins in pipelines or alone
     else
         status = exec_single(cmd);
-
-    // restore stdio
-    if (saved_in  >= 0) { dup2(saved_in,  STDIN_FILENO);  close(saved_in); }
-    if (saved_out >= 0) { dup2(saved_out, STDOUT_FILENO); close(saved_out); }
 
     return status;
 }

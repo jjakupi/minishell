@@ -69,3 +69,17 @@ void free_command(t_command *cmd)
 
     free(cmd);
 }
+
+void normalize_empty_cmd(t_command *c)
+{
+    if (c->cmd[0] == '\0' && c->arg_count > 0)
+    {
+        free(c->cmd);
+        c->cmd = strdup(c->args[0]);
+        for (int i = 1; i < c->arg_count; i++)
+            c->args[i-1] = c->args[i];
+        c->arg_count--;
+        c->args = realloc(c->args, (c->arg_count+1) * sizeof *c->args);
+        c->args[c->arg_count] = NULL;
+    }
+}

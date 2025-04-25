@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 13:56:55 by julrusse          #+#    #+#             */
-/*   Updated: 2025/04/24 14:04:39 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/04/25 15:54:01 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,8 @@
 # include <string.h>
 # include <ctype.h>
 # include <fcntl.h>
+# include <stdbool.h>
+# include <errno.h>
 # include <unistd.h>
 # include <sys/wait.h>
 # include <readline/readline.h>
@@ -160,11 +162,11 @@ int				set_env_var(char ***env_ptr, const char *assignment);
 char			*get_env_value(const char *var);
 char			*expand_argument(const char *arg, int last_exit_status);
 void			expand_command_arguments(t_command *cmd, int last_exit_status);
+void			normalize_empty_cmd(t_command *c);
 
 // Command Execution
 int				execute_command(t_command *cmd);
 int				exec_pipeline(t_command *head);
-int				execute_command(t_command *cmds);
 
 // Utility Functions
 void			exit_with_error(const char *msg);
