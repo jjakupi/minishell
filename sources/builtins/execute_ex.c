@@ -82,7 +82,7 @@ static void child_exec_one(t_command *cmd)
     }
 
     // builtin inline if standalone (no pipeline)
-    if (is_builtin(cmd->cmd) && !cmd->next)
+    if (is_builtin(cmd->cmd))
         _exit(execute_builtin(cmd));
 
     // build argv
@@ -133,50 +133,77 @@ static void child_exec_one(t_command *cmd)
     else
         _exit(127);
 }
+// assume child_exec_one(cmd) exists and calls _exit(...) on failure/success
 
-// exec_pipeline: forks children for each pipeline stage
-int exec_pipeline(t_command *head)
-{
-    t_command *c = head;
-    int in_fd = STDIN_FILENO;
-    pid_t pids[64];
+int exec_pipeline(t_command *head) {
+    // 1) Count how many stages we have
     int n = 0;
-
-    for (; c->next; c = c->next)
-    {
-        int fds[2];
-        pipe(fds);
-        pids[n] = fork();
-        if (pids[n] == 0)
-        {
-            dup2(in_fd, STDIN_FILENO);
-            dup2(fds[1], STDOUT_FILENO);
-            close(fds[0]); close(fds[1]);
-            if (in_fd != STDIN_FILENO) close(in_fd);
-            child_exec_one(c);
-        }
-        close(fds[1]);
-        if (in_fd != STDIN_FILENO) close(in_fd);
-        in_fd = fds[0];
+    for (t_command *c = head; c; c = c->next)
         n++;
-    }
-    // last stage
-    pids[n] = fork();
-    if (pids[n] == 0)
-    {
-        dup2(in_fd, STDIN_FILENO);
-        if (in_fd != STDIN_FILENO) close(in_fd);
-        child_exec_one(c);
-    }
-    if (in_fd != STDIN_FILENO) close(in_fd);
-    n++;
+    if (n == 0) return 0;
 
+    // 2) Collect pointers into an array so we can index backwards
+    t_command **stages = malloc(n * sizeof *stages);
+    if (!stages) perror("malloc"), exit(1);
+    int i = 0;
+    for (t_command *c = head; c; c = c->next)
+        stages[i++] = c;
+
+    // 3) Create all the pipes
+    int (*pipes)[2] = malloc((n-1) * sizeof pipes[0]);
+    for (i = 0; i < n-1; i++) {
+        if (pipe(pipes[i]) < 0) { perror("pipe"); exit(1); }
+    }
+
+    // 4) Fork stages from last → first
+    pid_t *pids = malloc(n * sizeof *pids);
+
+	for (i = n-1; i >= 0; i--) {
+        pid_t pid = fork();
+        if (pid < 0) {
+            perror("fork");
+            exit(1);
+        }
+        if (pid == 0) {
+            // child i: wire up stdin/stdout
+            if (i < n-1) {
+                dup2(pipes[i][1], STDOUT_FILENO);
+            }
+            if (i > 0) {
+                dup2(pipes[i-1][0], STDIN_FILENO);
+            }
+            // close all pipe fds
+            for (int j = 0; j < n-1; j++) {
+                close(pipes[j][0]);
+                close(pipes[j][1]);
+            }
+            // run this stage
+            child_exec_one(stages[i]);
+            _exit(1); // should never get here
+        }
+        pids[i] = pid;
+    }
+
+    // 5) Parent closes all pipe fds
+    for (i = 0; i < n-1; i++) {
+        close(pipes[i][0]);
+        close(pipes[i][1]);
+    }
+
+    // 6) Wait for all, return the *last* stage’s exit code
     int status = 0;
-    for (int i = 0; i < n; i++)
+    for (i = 0; i < n; i++) {
         waitpid(pids[i], &status, 0);
+    }
+    int exit_code = WIFEXITED(status) ? WEXITSTATUS(status) : 1;
 
-    return WIFEXITED(status) ? WEXITSTATUS(status) : 1;
+    free(stages);
+    free(pipes);
+    free(pids);
+    return exit_code;
 }
+
+
 
 // exec_single: for a lone external command
 static int exec_single(t_command *cmd)
