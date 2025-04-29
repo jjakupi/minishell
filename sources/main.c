@@ -20,7 +20,14 @@ static void fix_empty_cmd(t_command *c)
         c->args[c->arg_count] = NULL;
     }
 }
-
+static void init_shlvl(void) {
+    char *old = getenv("SHLVL");
+    int lvl = old ? atoi(old) + 1 : 1;
+    char buf[16];
+    snprintf(buf, sizeof buf, "%d", lvl);
+    // update the environment; 1 == overwrite existing
+    setenv("SHLVL", buf, 1);
+}
 int main(void)
 {
     char       *input;
@@ -28,7 +35,7 @@ int main(void)
     t_command  *cmds;
     int         parse_status;
     int         last_exit_status = 0;
-
+	init_shlvl();
     while (1)
     {
         input = readline(PROMPT);

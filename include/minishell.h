@@ -6,7 +6,7 @@
 /*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 13:56:55 by julrusse          #+#    #+#             */
-/*   Updated: 2025/04/28 21:58:56 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/04/29 22:24:03 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,6 @@
 
 // Global signal handler variable
 extern volatile sig_atomic_t	g_signal;
-
 // Token types
 typedef enum e_token_type
 {
@@ -104,7 +103,7 @@ int				check_next_token(t_token *current, char **value);
 int				handle_token_parsing(t_command *cmd, t_token **tokens);
 int				has_unmatched_quotes(const char *str);
 char			*remove_surrounding_quotes(const char *str);
-
+void minishell_perror(const char *what);
 // Redirection Handling
 int				is_redirection(t_token_type type);
 int				parse_redirections(t_command *cmd, t_token **tokens);
@@ -165,8 +164,8 @@ void			expand_command_arguments(t_command *cmd, int last_exit_status);
 void			normalize_empty_cmd(t_command *c);
 
 // Command Execution
-int				execute_command(t_command *cmd);
-int				exec_pipeline(t_command *head);
+int execute_command(t_command *cmd);
+int exec_pipeline(t_command *head);
 
 // Utility Functions
 void			exit_with_error(const char *msg);
