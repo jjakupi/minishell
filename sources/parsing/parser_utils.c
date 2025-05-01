@@ -1,81 +1,62 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parser_utils.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/05/01 15:05:58 by julrusse          #+#    #+#             */
+/*   Updated: 2025/05/01 15:18:28 by julrusse         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/minishell.h"
 
-int	has_unmatched_quotes(const char *str)
+static int	check_pipe_syntax(t_token *tok)
 {
-	char	quote = 0;
-	for (int i = 0; str[i]; i++)
+	if (tok->type == PIPE)
 	{
-		if (!quote && (str[i] == '\'' || str[i] == '"'))
-			quote = str[i];
-		else if (quote && str[i] == quote)
-			quote = 0;
-	}
-	return (quote != 0);
-}
-
-char *remove_surrounding_quotes(const char *str)
-{
-    size_t len = strlen(str);
-    if (len >= 2 && ((str[0] == '\'' && str[len-1] == '\'')
-                   || (str[0] == '\"' && str[len-1] == '\"')))
-    {
-        char *out = malloc(len-1);
-        if (!out) return NULL;
-        memcpy(out, str+1, len-2);
-        out[len-2] = '\0';
-        return out;
-    }
-    return strdup(str);
-}
-int	is_redirection(t_token_type type)
-{
-	return (type == REDIR_IN || type == REDIR_OUT || type == REDIR_APPEND || type == HEREDOC);
-}
-
-int check_syntax_errors(t_token *tokens)
-{
-	if (!tokens)
-		return (0);
-
-	if (tokens->type == PIPE)
-	{
-		printf("minishell: syntax error near unexpected token `|'\n");
-		return (1);
-	}
-
-	while (tokens)
-	{
-		if (tokens->type == PIPE)
+		if (tok->next == NULL || tok->next->type == PIPE)
 		{
-			if (!tokens->next || tokens->next->type == PIPE)
-			{
-				printf("minishell: syntax error near unexpected token `|'\n");
-				return (1);
-			}
+			printf("minishell: syntax error near unexpected token `|'\n");
+			return (1);
 		}
-		else if (is_redirection(tokens->type))
-		{
-			if (!tokens->next || tokens->next->type != WORD)
-			{
-				printf("minishell: syntax error near unexpected token `%s'\n",
-					tokens->next ? tokens->next->value : "newline");
-				return (1);
-			}
-		}
-		tokens = tokens->next;
 	}
 	return (0);
 }
 
-
-int check_next_token(t_token *current, char **value)
+static int	check_redir_syntax(t_token *tok)
 {
-    if (!current->next || current->next->type != WORD)
-    {
-        fprintf(stderr, "bash: syntax error near unexpected token `%s'\n",
-                current->next ? current->next->value : "newline");
-        return -1;
-    }
-    *value = current->next->value;
-    return 0;
+	const char	*unexpected;
+
+	if (is_redirection(tok->type))
+	{
+		if (tok->next == NULL || tok->next->type != WORD)
+		{
+			if (tok->next != NULL)
+				unexpected = tok->next->value;
+			else
+				unexpected = "newline";
+			printf("minishell: syntax error near unexpected token `%s'\n",
+				unexpected);
+			return (1);
+		}
+	}
+	return (0);
+}
+
+int	check_syntax_errors(t_token *tokens)
+{
+	t_token	*cur;
+
+	if (tokens == NULL)
+		return (0);
+	cur = tokens;
+	while (cur)
+	{
+		if (check_pipe_syntax(cur) || check_redir_syntax(cur))
+			return (1);
+		cur = cur->next;
+	}
+	return (0);
 }

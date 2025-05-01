@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 13:56:55 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/01 11:59:32 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/01 15:42:25 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,29 +62,24 @@ typedef struct s_token
 // Command structure
 typedef struct s_command
 {
-    char   *cmd;
-    int     suppress_newline;
-
-    // argv
-    char  **args;
-    int     arg_count;
-
-    // all '<' redirections, in parse order
-    char  **in_files;
-    int     in_count;
-
-    // all '>' / '>>' redirections, in parse order
-    char  **out_files;
-    int     out_count;
-    int    *append_flags;  // parallel array: 0=truncate, 1=append
-
-    // here-doc
-    char   *heredoc_delimiter;
-    int     has_heredoc;
-    int     expand_heredoc;
-
-    struct s_command *next;
-} t_command;
+	char				*cmd;
+	int					suppress_newline;
+	// argv
+	char				**args;
+	int					arg_count;
+	// all '<' redirections, in parse order
+	char				**in_files;
+	int					in_count;
+	// all '>' / '>>' redirections, in parse order
+	char				**out_files;
+	int					out_count;
+	int					*append_flags; // parallel array: 0=truncate, 1=append
+	// here-doc
+	char				*heredoc_delimiter;
+	int					has_heredoc;
+	int					expand_heredoc;
+	struct s_command	*next;
+}	t_command;
 
 // Lexing (Tokenization) Functions
 t_token			*tokenize(const char *input);
@@ -97,8 +92,10 @@ char			*append_char(char *str, char c);
 void			flush_current_arg(t_token **tokens, char **current_arg);
 void			process_whitespace(int *i, t_token **tokens,
 					char **current_arg);
-int				handle_double_special(const char *input, int *i, t_token **tokens);
-void			handle_single_special(const char *input, int *i, t_token **tokens);
+int				handle_double_special(const char *input,
+					int *i, t_token **tokens);
+void			handle_single_special(const char *input,
+					int *i, t_token **tokens);
 void			process_special(const char *input, int *i, t_token **tokens,
 					char **current_arg);
 char			*build_wrapped(const char *start_ptr, int len, char quote);
@@ -120,6 +117,10 @@ int				handle_token_parsing(t_command *cmd, t_token **tokens);
 int				has_unmatched_quotes(const char *str);
 char			*remove_surrounding_quotes(const char *str);
 void			minishell_perror(const char *what);
+int				push_input(t_command *cmd, const char *raw);
+int				push_output(t_command *cmd, const char *raw, int append);
+int				handle_echo_pipe(t_command *cmd, t_token **tok);
+t_command		*init_echo_command(void);
 
 // Redirection Handling
 int				is_redirection(t_token_type type);
@@ -200,7 +201,8 @@ void			make_pipes(int (*pipes)[2], int n);
 int				wait_for_children(pid_t *pids, int n);
 
 // pipeline.c
-void			close_unused_pipes(int (*pipes)[2], int count, int in_fd, int out_fd);
+void			close_unused_pipes(int (*pipes)[2], int count, int in_fd,
+					int out_fd);
 void			close_all_pipes(int (*pipes)[2], int count);
 // Command Execution
 int				execute_command(t_command *cmd);
