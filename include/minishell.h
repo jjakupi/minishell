@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 13:56:55 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/01 11:02:49 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/01 11:59:32 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,7 +119,7 @@ int				check_next_token(t_token *current, char **value);
 int				handle_token_parsing(t_command *cmd, t_token **tokens);
 int				has_unmatched_quotes(const char *str);
 char			*remove_surrounding_quotes(const char *str);
-void            minishell_perror(const char *what);
+void			minishell_perror(const char *what);
 
 // Redirection Handling
 int				is_redirection(t_token_type type);
@@ -180,9 +180,32 @@ char			*expand_argument(const char *arg, int last_exit_status);
 void			expand_command_arguments(t_command *cmd, int last_exit_status);
 void			normalize_empty_cmd(t_command *c);
 
+/* exec_helper.c */
+void			handle_empty(t_command *cmd);
+void			wire_pipes(int in_fd, int out_fd);
+void			apply_output_redirects(t_command *cmd);
+void			apply_input_redirects(t_command *cmd);
+void			apply_heredoc(t_command *cmd);
+
+/* exec_action.c */
+void			run_builtin_or_exit(t_command *cmd);
+char			**build_argv(t_command *cmd);
+char			*resolve_path(const char *name);
+void			exec_external(t_command *cmd);
+void			child_exec_one(t_command *cmd, int in_fd, int out_fd);
+// pipeline_utils.c
+int				count_stages(t_command *head);
+t_command		**build_stage_array(t_command *head, int n);
+void			make_pipes(int (*pipes)[2], int n);
+int				wait_for_children(pid_t *pids, int n);
+
+// pipeline.c
+void			close_unused_pipes(int (*pipes)[2], int count, int in_fd, int out_fd);
+void			close_all_pipes(int (*pipes)[2], int count);
 // Command Execution
-int execute_command(t_command *cmd);
-int exec_pipeline(t_command *head);
+int				execute_command(t_command *cmd);
+int				exec_pipeline(t_command *head);
+char			*find_executable(const char *name);
 
 // Utility Functions
 void			exit_with_error(const char *msg);
