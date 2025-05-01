@@ -12,7 +12,6 @@ void minishell_perror(const char *what)
     write(2, "\n", 1);
 }
 
-// 1) Find an executable on $PATH
 static char *find_executable(const char *name)
 {
     char *path_env = getenv("PATH");
@@ -32,67 +31,62 @@ static char *find_executable(const char *name)
     return NULL;
 }
 
-// child_exec_one: sets up redirections, builtins, external exec
-static void child_exec_one(t_command *cmd)
+// child_exec_one: sets up pipes, redirections, builtins, external exec
+static void child_exec_one(t_command *cmd, int pipe_in_fd, int pipe_out_fd)
 {
-    // empty command => succeed without doing anything
-    if (cmd->cmd[0] == '\0')
+    int fd;
+
+    // A) empty‐string => no‐op
+    if (!cmd->cmd || cmd->cmd[0] == '\0')
         _exit(0);
 
-    // heredoc handling
-    if (cmd->has_heredoc)
+    // B) Always wire the pipe ends first
+    if (pipe_out_fd >= 0)
     {
-        int hpipe[2];
-        pipe(hpipe);
-        for (;;)
-        {
-            char *line = readline("> ");
-            if (!line || strcmp(line, cmd->heredoc_delimiter) == 0)
-            {
-                free(line);
-                break;
-            }
-            write(hpipe[1], line, strlen(line));
-            write(hpipe[1], "\n", 1);
-            free(line);
-        }
-        close(hpipe[1]);
-        dup2(hpipe[0], STDIN_FILENO);
-        close(hpipe[0]);
+        dup2(pipe_out_fd, STDOUT_FILENO);
+        close(pipe_out_fd);
+    }
+    if (pipe_in_fd >= 0)
+    {
+        dup2(pipe_in_fd, STDIN_FILENO);
+        close(pipe_in_fd);
     }
 
-    // input redirection
-    if (cmd->input_file)
+    // C) all '>' / '>>' redirections first
+    for (int i = 0; i < cmd->out_count; i++)
     {
-        int in = open(cmd->input_file, O_RDONLY);
-        if (in < 0) { minishell_perror(cmd->input_file); _exit(1); }
-        dup2(in, STDIN_FILENO);
-        close(in);
-    }
-    // output/append redirection
-    if (cmd->output_file)
-    {
-        int flags = cmd->append_mode
-            ? (O_WRONLY | O_CREAT | O_APPEND)
-            : (O_WRONLY | O_CREAT | O_TRUNC);
-        int out = open(cmd->output_file, flags, 0644);
-        if (out < 0) { minishell_perror(cmd->output_file); _exit(1); }
-        dup2(out, STDOUT_FILENO);
-        close(out);
+        int flags = O_WRONLY | O_CREAT |
+                   (cmd->append_flags[i] ? O_APPEND : O_TRUNC);
+        fd = open(cmd->out_files[i], flags, 0644);
+        if (fd < 0) { minishell_perror(cmd->out_files[i]); _exit(1); }
+        if (i == cmd->out_count - 1)
+            dup2(fd, STDOUT_FILENO);
+        close(fd);
     }
 
-    // builtin inline if standalone (no pipeline)
+    // D) all '<' redirections next
+    for (int i = 0; i < cmd->in_count; i++)
+    {
+        fd = open(cmd->in_files[i], O_RDONLY);
+        if (fd < 0) { minishell_perror(cmd->in_files[i]); _exit(1); }
+        if (i == cmd->in_count - 1)
+            dup2(fd, STDIN_FILENO);
+        close(fd);
+    }
+
+    // E) here-doc handling if needed ...
+
+    // F) builtin in a pipeline?
     if (is_builtin(cmd->cmd))
         _exit(execute_builtin(cmd));
 
-    // build argv
+    // G) external exec
     char **argv = calloc(cmd->arg_count + 2, sizeof *argv);
     argv[0] = cmd->cmd;
     for (int i = 0; i < cmd->arg_count; i++)
         argv[i+1] = cmd->args[i];
     argv[cmd->arg_count+1] = NULL;
 
-    // determine exec path
     char *path;
     if (strchr(cmd->cmd, '/'))
     {
@@ -115,7 +109,6 @@ static void child_exec_one(t_command *cmd)
         }
     }
 
-    // directory check
     struct stat st;
     if (stat(path, &st) == 0 && S_ISDIR(st.st_mode))
     {
@@ -125,136 +118,134 @@ static void child_exec_one(t_command *cmd)
         _exit(126);
     }
 
-    // exec
     execve(path, argv, environ);
     minishell_perror(cmd->cmd);
-    if (errno == EACCES || errno == EISDIR)
-        _exit(126);
-    else
-        _exit(127);
-}
-// assume child_exec_one(cmd) exists and calls _exit(...) on failure/success
-
-int exec_pipeline(t_command *head) {
-    // 1) Count how many stages we have
-    int n = 0;
-    for (t_command *c = head; c; c = c->next)
-        n++;
-    if (n == 0) return 0;
-
-    // 2) Collect pointers into an array so we can index backwards
-    t_command **stages = malloc(n * sizeof *stages);
-    if (!stages) perror("malloc"), exit(1);
-    int i = 0;
-    for (t_command *c = head; c; c = c->next)
-        stages[i++] = c;
-
-    // 3) Create all the pipes
-    int (*pipes)[2] = malloc((n-1) * sizeof pipes[0]);
-    for (i = 0; i < n-1; i++) {
-        if (pipe(pipes[i]) < 0) { perror("pipe"); exit(1); }
-    }
-
-    // 4) Fork stages from last → first
-    pid_t *pids = malloc(n * sizeof *pids);
-
-	for (i = n-1; i >= 0; i--) {
-        pid_t pid = fork();
-        if (pid < 0) {
-            perror("fork");
-            exit(1);
-        }
-        if (pid == 0) {
-            // child i: wire up stdin/stdout
-            if (i < n-1) {
-                dup2(pipes[i][1], STDOUT_FILENO);
-            }
-            if (i > 0) {
-                dup2(pipes[i-1][0], STDIN_FILENO);
-            }
-            // close all pipe fds
-            for (int j = 0; j < n-1; j++) {
-                close(pipes[j][0]);
-                close(pipes[j][1]);
-            }
-            // run this stage
-            child_exec_one(stages[i]);
-            _exit(1); // should never get here
-        }
-        pids[i] = pid;
-    }
-
-    // 5) Parent closes all pipe fds
-    for (i = 0; i < n-1; i++) {
-        close(pipes[i][0]);
-        close(pipes[i][1]);
-    }
-
-    // 6) Wait for all, return the *last* stage’s exit code
-    int status = 0;
-    for (i = 0; i < n; i++) {
-        waitpid(pids[i], &status, 0);
-    }
-    int exit_code = WIFEXITED(status) ? WEXITSTATUS(status) : 1;
-
-    free(stages);
-    free(pipes);
-    free(pids);
-    return exit_code;
+	if (errno == EACCES || errno == EISDIR)
+	_exit(126);
+	else
+	_exit(127);
 }
 
-
-
-// exec_single: for a lone external command
 static int exec_single(t_command *cmd)
 {
     pid_t pid = fork();
-    if (pid < 0)  { minishell_perror("fork"); return 1; }
-    if (pid == 0) child_exec_one(cmd);
+    if (pid < 0) { minishell_perror("fork"); return 1; }
+    if (pid == 0)
+        child_exec_one(cmd, -1, -1);
     int status = 0;
     waitpid(pid, &status, 0);
     return WIFEXITED(status) ? WEXITSTATUS(status) : 1;
 }
 
-// execute_command: dispatch, but only the parent handles standalone builtins’ redirects
+
+
+int exec_pipeline(t_command *head)
+{
+    int n = 0;
+    for (t_command *c = head; c; c = c->next) n++;
+    if (n == 0) return 0;
+
+    t_command **st = malloc(n * sizeof *st);
+    for (int i = 0; i < n; i++)
+    {
+        st[i] = head;
+        head = head->next;
+    }
+
+    int (*pipes)[2] = malloc((n-1) * sizeof pipes[0]);
+    for (int i = 0; i < n-1; i++)
+        if (pipe(pipes[i]) < 0) { perror("pipe"); exit(1); }
+
+    pid_t *pids = malloc(n * sizeof *pids);
+    for (int i = n-1; i >= 0; i--)
+    {
+        pid_t pid = fork();
+        if (pid < 0) { perror("fork"); exit(1); }
+        if (pid == 0)
+        {
+            int in_fd  = (i > 0)   ? pipes[i-1][0] : -1;
+            int out_fd = (i < n-1) ? pipes[i][1]   : -1;
+            for (int j = 0; j < n-1; j++)
+            {
+                if (pipes[j][0] != in_fd)  close(pipes[j][0]);
+                if (pipes[j][1] != out_fd) close(pipes[j][1]);
+            }
+            child_exec_one(st[i], in_fd, out_fd);
+            _exit(1);
+        }
+        pids[i] = pid;
+    }
+
+    for (int i = 0; i < n-1; i++)
+    {
+        close(pipes[i][0]);
+        close(pipes[i][1]);
+    }
+    int status = 0;
+    for (int i = 0; i < n; i++)
+        waitpid(pids[i], &status, 0);
+    return WIFEXITED(status) ? WEXITSTATUS(status) : 1;
+}
+
 int execute_command(t_command *cmd)
 {
-    int saved_in = -1, saved_out = -1;
-    int status;
     bool pipeline           = (cmd->next != NULL);
     bool standalone_builtin = (!pipeline && is_builtin(cmd->cmd));
+    int status;
+
+    // Empty‐string => no-op
+    if (!cmd->cmd || cmd->cmd[0] == '\0')
+        return 0;
 
     if (standalone_builtin)
     {
-        if (cmd->input_file)
+        int saved_in  = -1, saved_out = -1;
+        int fd;
+
+        // 1) ALL output redirs > & >>
+        for (int i = 0; i < cmd->out_count; i++)
         {
-            int in = open(cmd->input_file, O_RDONLY);
-            if (in < 0) return (minishell_perror(cmd->input_file), 1);
-            saved_in = dup(STDIN_FILENO);
-            dup2(in, STDIN_FILENO);
-            close(in);
-        }
-        if (cmd->output_file)
-        {
-            int flags = cmd->append_mode
-                      ? (O_WRONLY|O_CREAT|O_APPEND)
-                      : (O_WRONLY|O_CREAT|O_TRUNC);
-            int out = open(cmd->output_file, flags, 0644);
-            if (out < 0) return (minishell_perror(cmd->output_file), 1);
+            int flags = O_WRONLY | O_CREAT |
+                       (cmd->append_flags[i] ? O_APPEND : O_TRUNC);
+            fd = open(cmd->out_files[i], flags, 0644);
+            if (fd < 0)
+            {
+                minishell_perror(cmd->out_files[i]);
+                return 1;
+            }
             saved_out = dup(STDOUT_FILENO);
-            dup2(out, STDOUT_FILENO);
-            close(out);
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
         }
+
+        // 2) ALL input redirs <
+        for (int i = 0; i < cmd->in_count; i++)
+        {
+            fd = open(cmd->in_files[i], O_RDONLY);
+            if (fd < 0)
+            {
+                minishell_perror(cmd->in_files[i]);
+                if (saved_out >= 0) { dup2(saved_out, STDOUT_FILENO); close(saved_out); }
+                return 1;
+            }
+            saved_in = dup(STDIN_FILENO);
+            dup2(fd, STDIN_FILENO);
+            close(fd);
+        }
+
+        // 3) run builtin
         status = execute_builtin(cmd);
+
+        // 4) restore stdio
         if (saved_in  >= 0) { dup2(saved_in,  STDIN_FILENO);  close(saved_in);  }
         if (saved_out >= 0) { dup2(saved_out, STDOUT_FILENO); close(saved_out); }
+
         return status;
     }
 
+    // pipeline or single external
     if (pipeline)
         status = exec_pipeline(cmd);
-    else if (is_builtin(cmd->cmd))
-        status = exec_single(cmd);  // fork for builtins in pipelines or alone
     else
         status = exec_single(cmd);
 

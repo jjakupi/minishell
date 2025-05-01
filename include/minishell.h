@@ -6,7 +6,7 @@
 /*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 13:56:55 by julrusse          #+#    #+#             */
-/*   Updated: 2025/04/29 22:24:03 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/04/30 20:59:04 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,18 +61,29 @@ typedef struct s_token
 // Command structure
 typedef struct s_command
 {
-	char				*cmd;
-	int					suppress_newline;
-	char				**args;
-	int					arg_count;
-	char				*input_file;
-	char				*output_file;
-	int					append_mode;
-	char				*heredoc_delimiter;
-	int					has_heredoc;
-	int					expand_heredoc;
-	struct s_command	*next;
-}	t_command;
+    char   *cmd;
+    int     suppress_newline;
+
+    // argv
+    char  **args;
+    int     arg_count;
+
+    // all '<' redirections, in parse order
+    char  **in_files;
+    int     in_count;
+
+    // all '>' / '>>' redirections, in parse order
+    char  **out_files;
+    int     out_count;
+    int    *append_flags;  // parallel array: 0=truncate, 1=append
+
+    // here-doc
+    char   *heredoc_delimiter;
+    int     has_heredoc;
+    int     expand_heredoc;
+
+    struct s_command *next;
+} t_command;
 
 // Lexing (Tokenization) Functions
 t_token			*tokenize(const char *input);
