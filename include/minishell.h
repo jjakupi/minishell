@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 13:56:55 by julrusse          #+#    #+#             */
-/*   Updated: 2025/04/30 20:59:04 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/01 11:02:49 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@
 
 // Global signal handler variable
 extern volatile sig_atomic_t	g_signal;
+
 // Token types
 typedef enum e_token_type
 {
@@ -96,8 +97,12 @@ char			*append_char(char *str, char c);
 void			flush_current_arg(t_token **tokens, char **current_arg);
 void			process_whitespace(int *i, t_token **tokens,
 					char **current_arg);
+int				handle_double_special(const char *input, int *i, t_token **tokens);
+void			handle_single_special(const char *input, int *i, t_token **tokens);
 void			process_special(const char *input, int *i, t_token **tokens,
 					char **current_arg);
+char			*build_wrapped(const char *start_ptr, int len, char quote);
+void			append_wrapped(char **current_arg, const char *wrapped);
 int				process_quotes(const char *input, int *i, char **current_arg);
 char			*extract_word(const char *input, int *index);
 char			*extract_special(const char *input, int *index);
@@ -114,7 +119,8 @@ int				check_next_token(t_token *current, char **value);
 int				handle_token_parsing(t_command *cmd, t_token **tokens);
 int				has_unmatched_quotes(const char *str);
 char			*remove_surrounding_quotes(const char *str);
-void minishell_perror(const char *what);
+void            minishell_perror(const char *what);
+
 // Redirection Handling
 int				is_redirection(t_token_type type);
 int				parse_redirections(t_command *cmd, t_token **tokens);

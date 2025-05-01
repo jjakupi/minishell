@@ -1,20 +1,8 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   lexer_quotes.c                                     :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/04/24 17:07:58 by julrusse          #+#    #+#             */
-/*   Updated: 2025/04/24 17:07:59 by julrusse         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
-#include "../include/minishell.h"
-
+/*
 int process_quotes(const char *input, int *i, char **current_arg)
 {
-    char  quote = input[(*i)++];      // ' or "
+    char  quote = input[(*i)++];
     int   start = *i;
     char *inner;
     char *wrapped;
@@ -90,4 +78,4 @@ void flush_current_arg(t_token **tokens, char **current_arg)
 		*current_arg = NULL;
 	}
 }
-
+*/

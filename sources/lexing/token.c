@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   token.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/25 17:08:58 by julrusse          #+#    #+#             */
+/*   Updated: 2025/04/25 17:10:26 by julrusse         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/minishell.h"
 
 t_token	*new_token(t_token_type type, const char *value)
@@ -20,22 +32,22 @@ t_token	*new_token(t_token_type type, const char *value)
 	return (token);
 }
 
-
 void	add_token(t_token **head, t_token *new_tok)
 {
+	t_token	*tmp;
+
 	if (!head || !new_tok)
 		return ;
 	if (!*head)
 		*head = new_tok;
 	else
 	{
-		t_token *tmp = *head;
+		tmp = *head;
 		while (tmp->next)
 			tmp = tmp->next;
 		tmp->next = new_tok;
 	}
 }
-
 
 void	free_tokens(t_token *head)
 {
@@ -68,4 +80,3 @@ const char	*token_type_to_str(t_token_type type)
 		return ("END");
 	return ("UNKNOWN");
 }
-
