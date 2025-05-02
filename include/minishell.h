@@ -6,7 +6,7 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 13:56:55 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/01 17:09:55 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/02 12:08:08 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,7 +119,9 @@ t_token_type	get_special_token_type(const char *op);
 t_command		*parse_single_command(t_token *tokens);
 int				parse_pipeline(t_token *tokens, t_command **result);
 t_command		*create_command(void);
+char			**alloc_new_args(char **old_args, int old_count);
 void			add_argument(t_command *cmd, const char *arg);
+void			free_string_array(char **arr, int count);
 void			free_command(t_command *cmd);
 int				check_syntax_errors(t_token *tokens);
 int				check_next_token(t_token *current, char **value);
