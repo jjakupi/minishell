@@ -1,8 +1,20 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   execute_builtin.c                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/05/02 13:43:23 by julrusse          #+#    #+#             */
+/*   Updated: 2025/05/02 13:47:24 by julrusse         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/minishell.h"
 
-extern char **environ;
+extern char	**environ;
 
-int ft_strcmp(const char *s1, const char *s2)
+int	ft_strcmp(const char *s1, const char *s2)
 {
 	while (*s1 && *s2 && (*s1 == *s2))
 	{
@@ -11,19 +23,19 @@ int ft_strcmp(const char *s1, const char *s2)
 	}
 	return ((unsigned char)*s1 - (unsigned char)*s2);
 }
-int is_builtin(char *cmd)
+
+int	is_builtin(char *cmd)
 {
-	return (!ft_strcmp(cmd, "echo") || !ft_strcmp(cmd, "cd") ||
-			!ft_strcmp(cmd, "pwd") || !ft_strcmp(cmd, "export") ||
-			!ft_strcmp(cmd, "unset") || !ft_strcmp(cmd, "env") ||
-			!ft_strcmp(cmd, "exit"));
+	return (!ft_strcmp(cmd, "echo") || !ft_strcmp(cmd, "cd")
+		|| !ft_strcmp(cmd, "pwd") || !ft_strcmp(cmd, "export")
+		|| !ft_strcmp(cmd, "unset") || !ft_strcmp(cmd, "env")
+		|| !ft_strcmp(cmd, "exit"));
 }
 
-int execute_builtin(t_command *cmd)
+int	execute_builtin(t_command *cmd)
 {
 	if (!cmd || !cmd->cmd)
 		return (-1);
-
 	if (!ft_strcmp(cmd->cmd, "echo"))
 		return (builtin_echo(cmd));
 	else if (!ft_strcmp(cmd->cmd, "exit"))
