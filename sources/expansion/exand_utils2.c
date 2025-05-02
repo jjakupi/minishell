@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   exand_utils2.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/01 15:51:49 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 14:03:41 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/02 15:28:36 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ void	expand_dollar_question(int status, char *buf, int *pos)
 
 	num = ft_itoa(status);
 	if (num == NULL)
-		return;
+		return ;
 	n = ft_strlen(num);
 	ft_strlcpy(buf + *pos, num, n + 1);
 	*pos += n;
@@ -33,7 +33,7 @@ void	expand_dollar_pid(char *buf, int *pos)
 
 	num = ft_itoa((int)getpid());
 	if (num == NULL)
-		return;
+		return ;
 	n = ft_strlen(num);
 	ft_strlcpy(buf + *pos, num, n + 1);
 	*pos += n;

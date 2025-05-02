@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_exit.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 15:36:09 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 15:02:42 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/02 15:26:19 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ int	builtin_exit(t_command *cmd)
 	if (cmd->arg_count > 1)
 	{
 		write(2, "bash: exit: too many arguments\n", 31);
-		return 1;
+		return (1);
 	}
 	exit((unsigned char)atoi(cmd->args[0]));
 }

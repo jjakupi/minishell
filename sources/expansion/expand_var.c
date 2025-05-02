@@ -6,7 +6,7 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/01 15:51:49 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/01 17:06:13 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/02 15:25:37 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ void	expand_command_arguments(t_command *cmd, int last_exit_status)
 	char	*expanded;
 
 	if (cmd == NULL)
-		return;
+		return ;
 	if (cmd->cmd != NULL)
 	{
 		expanded = expand_argument(cmd->cmd, last_exit_status);
