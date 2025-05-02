@@ -20,60 +20,78 @@ static void fix_empty_cmd(t_command *c)
         c->args[c->arg_count] = NULL;
     }
 }
-/*static void init_shlvl(void) {
+static void init_shlvl(void) {
     char *old = getenv("SHLVL");
     int lvl = old ? atoi(old) + 1 : 1;
     char buf[16];
     snprintf(buf, sizeof buf, "%d", lvl);
     // update the environment; 1 == overwrite existing
     setenv("SHLVL", buf, 1);
-}*/
+}
 
-int main(void)
+static void	do_expansion(t_command* cmds, int last_status)
 {
-    char       *input;
-    t_token    *tokens;
-    t_command  *cmds;
-    int         parse_status;
-    int         last_exit_status = 0;
+	t_command* c = cmds;
+	while (c)
+	{
+		expand_command_arguments(c, last_status);
+		fix_empty_cmd(c);
+		c = c->next;
+	}
+}
 
-    while (1)
-    {
-        input = readline(PROMPT);
-        if (!input) { printf("exit\n"); break; }
-        if (*input) add_history(input);
+// The main read–eval–print loop
+static void	shell_loop(void)
+{
+	char* input;
+	t_token* tokens;
+	t_command* cmds;
+	int			parse_status;
+	int			last_exit = 0;
 
-        // ►►► Lexing + debug
-        tokens = tokenize(input);
+	while (1)
+	{
+		input = readline(PROMPT);
 
-        // ►►► Parsing + debug
-        parse_status = parse_pipeline(tokens, &cmds);
+		// pick up SIGINT (130)
+		if (g_last_exit_status)
+		{
+			last_exit = g_last_exit_status;
+			g_last_exit_status = 0;
+		}
 
-        free_tokens(tokens);
-        if (parse_status == 2 || !cmds)
-        {
-            free(input);
-            last_exit_status = 2;
-            continue;
-        }
+		if (!input)
+		{
+			printf("exit\n");
+			break;
+		}
 
-        // ►►► Expansion + debug
-        for (t_command *c = cmds; c; c = c->next) {
-            expand_command_arguments(c, last_exit_status);
+		if (*input)
+			add_history(input);
 
-        }
+		tokens = tokenize(input);
+		parse_status = parse_pipeline(tokens, &cmds);
+		free_tokens(tokens);
 
-        // your existing post–expansion fixups
-        for (t_command *c = cmds; c; c = c->next) {
-            fix_empty_cmd(c);
-        }
+		if (parse_status == 0 && cmds)
+		{
+			do_expansion(cmds, last_exit);
+			last_exit = execute_command(cmds);
+			free_command(cmds);
+		}
+		else
+		{
+			last_exit = 2;
+		}
 
-        // ►►► Execution
-        last_exit_status = execute_command(cmds);
+		free(input);
+	}
+}
 
-        free_command(cmds);
-        free(input);
-    }
-
-    return last_exit_status;
+int	main(void)
+{
+	init_signals();
+	init_shlvl();
+	shell_loop();
+	return g_last_exit_status;
 }

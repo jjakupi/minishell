@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 13:56:55 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 12:08:08 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/02 13:14:49 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,8 +36,7 @@
 # include "../libft/libft.h"
 
 // Global signal handler variable
-extern volatile sig_atomic_t	g_signal;
-
+extern volatile sig_atomic_t g_last_exit_status;
 // Token types
 typedef enum e_token_type
 {
@@ -238,5 +237,8 @@ int				is_numeric(const char *str);
 char			*ft_strcpy(char *dest, const char *src);
 char			*ft_strndup(const char *s, size_t n);
 int				ft_strcmp(const char *s1, const char *s2);
+
+//signals
+void			init_signals(void);
 
 #endif
