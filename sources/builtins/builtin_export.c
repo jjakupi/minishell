@@ -3,64 +3,23 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_export.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:08:44 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/01 15:47:51 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/02 17:48:43 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
 
-void	extract_key(const char *assignment, char *key)
+int update_entry(char **env, int idx, const char *assignment)
 {
-	int		len;
-	char	*eq;
+	char *new;
 
-	eq = ft_strchr(assignment, '=');
-	if (eq)
-		len = eq - assignment;
-	else
-		len = ft_strlen(assignment);
-	if (len > 255)
-		len = 255;
-	ft_strlcpy(key, assignment, len + 1);
-}
-
-int	add_entry(char ***env_ptr, const char *entry)
-{
-	char	**old_env;
-	char	**new_env;
-	int		n;
-	int		i;
-
-	old_env = *env_ptr;
-	n = env_op(old_env, NULL, 0);
-	new_env = malloc((n + 2) * sizeof(char *));
-	if (new_env == NULL)
-		return (1);
-	i = 0;
-	while (i < n)
-	{
-		new_env[i] = old_env[i];
-		i++;
-	}
-	new_env[n] = ft_strdup(entry);
-	if (new_env[n] == NULL)
-		return (free(new_env), 1);
-	new_env[n + 1] = NULL;
-	free(old_env);
-	*env_ptr = new_env;
-	return (0);
-}
-
-int	update_entry(char **env, int idx, const char *assignment)
-{
-	char	*new;
-
-	new = ft_strdup(assignment);
+	new = ft_strdup (assignment);
 	if (!new)
 		return (1);
+	free(env[idx]);
 	env[idx] = new;
 	return (0);
 }
@@ -87,10 +46,61 @@ int	set_env_var(char ***env_ptr, const char *assignment)
 	return (add_entry(env_ptr, assignment));
 }
 
+static int	handle_export_append(char *arg, char ***env)
+{
+	char	*plus;
+	char	key[256];
+	char	*suffix;
+	char	*oldval;
+	char	*tmp;
+	char	*entry;
+	int		idx;
+
+	plus = ft_strchr(arg, '+');
+	ft_strlcpy(key, arg, plus - arg + 1);
+	suffix = plus + 2;
+	idx = env_op(*env, key, 1);
+	if (idx < 0)
+		return (set_env_var(env, arg));
+	oldval = ft_strchr((*env)[idx], '=') + 1;
+	tmp = ft_strjoin(oldval, suffix);
+	if (!tmp)
+		return (1);
+	entry = ft_strjoin(key, "=");
+	if (!entry)
+	{
+		free(tmp);
+		return (1);
+	}
+	oldval = entry;
+	entry = ft_strjoin(oldval, tmp);
+	free(tmp);
+	free(oldval);
+	if (!entry)
+		return (1);
+	update_entry(*env, idx, entry);
+	free(entry);
+	return (0);
+}
+
+static int	handle_export_token(char *arg, char ***env)
+{
+	if (!is_valid_export_token(arg))
+	{
+		ft_putstr_fd("export: `", 2);
+		ft_putstr_fd(arg, 2);
+		ft_putendl_fd("': not a valid identifier", 2);
+		return (1);
+	}
+	if (set_env_var(env, arg) != 0)
+		return (1);
+	return (0);
+}
+
 int	builtin_export(t_command *cmd, char ***env)
 {
-	int	i;
-	int	status;
+	int		i;
+	int		status;
 
 	status = 0;
 	if (cmd->arg_count == 0)
@@ -101,15 +111,21 @@ int	builtin_export(t_command *cmd, char ***env)
 	i = 0;
 	while (i < cmd->arg_count)
 	{
-		if (!is_valid_export_token(cmd->args[i]))
+		char	*arg;
+		char	*plus;
+
+		arg = cmd->args[i];
+		plus = ft_strchr(arg, '+');
+		if (plus != NULL && plus[1] == '=')
 		{
-			ft_putstr_fd("export: `", 2);
-			ft_putstr_fd(cmd->args[i], 2);
-			ft_putendl_fd("': not a valid identifier", 2);
-			status = 1;
+			if (handle_export_append(arg, env) != 0)
+				status = 1;
 		}
-		else if (set_env_var(env, cmd->args[i]) != 0)
-			status = 1;
+		else
+		{
+			if (handle_export_token(arg, env) != 0)
+				status = 1;
+		}
 		i++;
 	}
 	return (status);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_export_utils2.c                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:10:09 by julrusse          #+#    #+#             */
-/*   Updated: 2025/04/24 12:20:19 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/02 17:36:03 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,4 +72,31 @@ void	print_sorted_env(char **env)
 		i++;
 	}
 	free(copy);
+}
+
+int	add_entry(char ***env_ptr, const char *entry)
+{
+	char	**old_env;
+	char	**new_env;
+	int		n;
+	int		i;
+
+	old_env = *env_ptr;
+	n = env_op(old_env, NULL, 0);
+	new_env = malloc((n + 2) * sizeof(char *));
+	if (new_env == NULL)
+		return (1);
+	i = 0;
+	while (i < n)
+	{
+		new_env[i] = old_env[i];
+		i++;
+	}
+	new_env[n] = ft_strdup(entry);
+	if (new_env[n] == NULL)
+		return (free(new_env), 1);
+	new_env[n + 1] = NULL;
+	free(old_env);
+	*env_ptr = new_env;
+	return (0);
 }

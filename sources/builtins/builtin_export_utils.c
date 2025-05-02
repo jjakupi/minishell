@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_export_utils.c                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:14:02 by julrusse          #+#    #+#             */
-/*   Updated: 2025/04/24 12:20:07 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/02 17:35:57 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,4 +75,19 @@ char	**copy_env(char **env)
 	}
 	copy[n] = NULL;
 	return (copy);
+}
+
+void	extract_key(const char *assignment, char *key)
+{
+	int		len;
+	char	*eq;
+
+	eq = ft_strchr(assignment, '=');
+	if (eq)
+		len = eq - assignment;
+	else
+		len = ft_strlen(assignment);
+	if (len > 255)
+		len = 255;
+	ft_strlcpy(key, assignment, len + 1);
 }

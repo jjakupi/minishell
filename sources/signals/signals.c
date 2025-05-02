@@ -1,8 +1,8 @@
 #include "../include/minishell.h"
 
-volatile sig_atomic_t g_last_exit_status;
+volatile sig_atomic_t	g_last_exit_status;
 
-static void sigint_handler(int signo)
+static void	sigint_handler(int signo)
 {
 	(void)signo;
 	write(STDOUT_FILENO, "\n", 1);
@@ -12,9 +12,9 @@ static void sigint_handler(int signo)
 	g_last_exit_status = 130;
 }
 
-void init_signals(void)
+void	init_signals(void)
 {
-	struct sigaction sa;
+	struct sigaction	sa;
 
 	sa.sa_handler = sigint_handler;
 	sigemptyset(&sa.sa_mask);
