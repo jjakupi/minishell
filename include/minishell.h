@@ -6,7 +6,7 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 13:56:55 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/01 15:42:25 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/01 17:09:55 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,6 +80,16 @@ typedef struct s_command
 	int					expand_heredoc;
 	struct s_command	*next;
 }	t_command;
+
+// Expansion structure
+typedef struct s_exp_ctx
+{
+	const char	*src;
+	char		*buf;
+	int			idx;
+	int			pos;
+	int			last_status;
+}	t_exp_ctx;
 
 // Lexing (Tokenization) Functions
 t_token			*tokenize(const char *input);
@@ -180,6 +190,14 @@ char			*get_env_value(const char *var);
 char			*expand_argument(const char *arg, int last_exit_status);
 void			expand_command_arguments(t_command *cmd, int last_exit_status);
 void			normalize_empty_cmd(t_command *c);
+int				is_entirely_single_quoted(const char *arg, int len);
+char			*handle_single_quotes(const char *arg, int len);
+void			expand_dollar_question(int status, char *buf, int *pos);
+void			expand_dollar_pid(char *buf, int *pos);
+void			expand_dollar_env(const char *s, int *idx, char *buf, int *pos);
+int				handle_dollar_expansion(t_exp_ctx *ctx);
+void			handle_char_expansion(t_exp_ctx *ctx);
+void			process_expansion(const char *s, int last_status, char *buf);
 
 /* exec_helper.c */
 void			handle_empty(t_command *cmd);
