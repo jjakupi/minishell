@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   command_normalize_free.c                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 11:20:19 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 11:59:22 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/02 14:01:44 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,3 +66,25 @@ void	normalize_empty_cmd(t_command *c)
 		c->args[c->arg_count] = NULL;
 	}
 }
+
+void	fix_empty_cmd(t_command *c)
+{
+	if (c->cmd[0] == '\0' && c->arg_count > 0)
+	{
+		char *first = c->args[0];
+
+		free(c->cmd);
+		c->cmd = ft_strdup(first);
+		if (!c->cmd)
+			exit_with_error("ft_strdup");
+		int i = 1;
+		while (i < c->arg_count)
+		{
+			c->args[i - 1] = c->args[i];
+			i++;
+		}
+		c->arg_count--;
+		c->args[c->arg_count] = NULL;
+	}
+}
+

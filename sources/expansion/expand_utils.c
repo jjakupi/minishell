@@ -3,19 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   expand_utils.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/01 15:51:49 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/01 17:07:15 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/02 13:59:35 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
-
-#include "minishell.h"
-#include "libft.h"
-#include <stdlib.h>
-#include <unistd.h>
 
 int	is_entirely_single_quoted(const char *arg, int len)
 {

@@ -1,34 +1,5 @@
 #include "../include/minishell.h"
 
-static void fix_empty_cmd(t_command *c)
-{
-    if (c->cmd[0] == '\0' && c->arg_count > 0)
-    {
-        /* 1) free the bogus empty cmd, grab args[0] as the real cmd */
-        free(c->cmd);
-        c->cmd = strdup(c->args[0]);
-
-        /* 2) slide everything else down one slot */
-        for (int i = 1; i < c->arg_count; i++)
-            c->args[i-1] = c->args[i];
-
-        /* 3) shrink the args[] array and NULL-terminate it */
-        c->arg_count--;
-        c->args = realloc(c->args, (c->arg_count + 1) * sizeof *c->args);
-        if (!c->args && c->arg_count > 0)
-            exit_with_error("realloc");
-        c->args[c->arg_count] = NULL;
-    }
-}
-static void init_shlvl(void) {
-    char *old = getenv("SHLVL");
-    int lvl = old ? atoi(old) + 1 : 1;
-    char buf[16];
-    snprintf(buf, sizeof buf, "%d", lvl);
-    // update the environment; 1 == overwrite existing
-    setenv("SHLVL", buf, 1);
-}
-
 static void	do_expansion(t_command* cmds, int last_status)
 {
 	t_command* c = cmds;
@@ -40,7 +11,6 @@ static void	do_expansion(t_command* cmds, int last_status)
 	}
 }
 
-// The main read–eval–print loop
 static void	shell_loop(void)
 {
 	char* input;
@@ -52,8 +22,6 @@ static void	shell_loop(void)
 	while (1)
 	{
 		input = readline(PROMPT);
-
-		// pick up SIGINT (130)
 		if (g_last_exit_status)
 		{
 			last_exit = g_last_exit_status;
@@ -65,7 +33,11 @@ static void	shell_loop(void)
 			printf("exit\n");
 			break;
 		}
-
+		if (input[0] == '\0')
+		{
+			free(input);
+			continue;
+		}
 		if (*input)
 			add_history(input);
 
@@ -91,7 +63,6 @@ static void	shell_loop(void)
 int	main(void)
 {
 	init_signals();
-	init_shlvl();
 	shell_loop();
 	return g_last_exit_status;
 }

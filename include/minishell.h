@@ -6,7 +6,7 @@
 /*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 13:56:55 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 13:14:49 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/02 14:02:21 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -191,6 +191,7 @@ char			*get_env_value(const char *var);
 char			*expand_argument(const char *arg, int last_exit_status);
 void			expand_command_arguments(t_command *cmd, int last_exit_status);
 void			normalize_empty_cmd(t_command *c);
+void			fix_empty_cmd(t_command *c);
 int				is_entirely_single_quoted(const char *arg, int len);
 char			*handle_single_quotes(const char *arg, int len);
 void			expand_dollar_question(int status, char *buf, int *pos);
@@ -199,6 +200,8 @@ void			expand_dollar_env(const char *s, int *idx, char *buf, int *pos);
 int				handle_dollar_expansion(t_exp_ctx *ctx);
 void			handle_char_expansion(t_exp_ctx *ctx);
 void			process_expansion(const char *s, int last_status, char *buf);
+void			init_shlvl(void);
+
 
 /* exec_helper.c */
 void			handle_empty(t_command *cmd);

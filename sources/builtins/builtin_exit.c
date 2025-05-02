@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_exit.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 15:36:09 by julrusse          #+#    #+#             */
-/*   Updated: 2025/04/24 13:40:59 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/02 15:02:42 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,23 +14,19 @@
 
 int	builtin_exit(t_command *cmd)
 {
-	long	code;
-
-	printf("exit\n");
 	if (cmd->arg_count == 0)
-		exit(EXIT_SUCCESS);
+		exit(0);
 	if (!is_numeric(cmd->args[0]))
 	{
-		ft_putstr_fd("bash: exit: ", 2);
-		ft_putstr_fd(cmd->args[0], 2);
-		ft_putendl_fd(": numeric argument required", 2);
+		write(2, "bash: exit: ", 12);
+		write(2, cmd->args[0], strlen(cmd->args[0]));
+		write(2, ": numeric argument required\n", 28);
 		exit(2);
 	}
 	if (cmd->arg_count > 1)
 	{
-		ft_putendl_fd("bash: exit: too many arguments", 2);
-		return (EXIT_FAILURE);
+		write(2, "bash: exit: too many arguments\n", 31);
+		return 1;
 	}
-	code = ft_atoi(cmd->args[0]);
-	exit((unsigned char)code);
+	exit((unsigned char)atoi(cmd->args[0]));
 }
