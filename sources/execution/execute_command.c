@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execute_command.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 13:47:36 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 14:12:51 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/02 16:13:46 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,7 +109,11 @@ int	execute_command(t_command *cmd)
 	pipeline = (cmd->next != NULL);
 	standalone_builtin = (!pipeline && is_builtin(cmd->cmd));
 	if (standalone_builtin)
+	{
+		if (strcmp(cmd->cmd, "exit") == 0)
+			write(1, "exit\n", 5);
 		return (perform_builtin_with_redirs(cmd));
+	}
 	if (pipeline)
 		status = exec_pipeline(cmd);
 	else
