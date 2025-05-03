@@ -6,7 +6,7 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 13:56:55 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/03 11:44:22 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/03 12:35:46 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@
 extern volatile sig_atomic_t	g_last_exit_status;
 
 // Environement pointer structure
-typedef struct s_shell // edited (new)
+typedef struct s_shell
 {
 	char	**envp;
 	int		last_exit;
@@ -158,7 +158,7 @@ t_command		*parse_export(t_token *tokens);
 t_command		*parse_unset(t_token *tokens);
 t_command		*parse_env(t_token *tokens);
 t_command		*parse_exit(t_token *tokens);
-int				execute_builtin(t_command *cmd, t_shell *shell); // edited
+int				execute_builtin(t_command *cmd, t_shell *shell);
 int				builtin_exit(t_command *cmd);
 int				builtin_echo(t_command *cmd);
 int				builtin_env(t_command *cmd, char **env);
@@ -217,13 +217,13 @@ void			apply_input_redirects(t_command *cmd);
 void			apply_heredoc(t_command *cmd);
 
 /* exec_action.c */
-void			run_builtin_or_exit(t_command *cmd, t_shell *shell); // edited
+void			run_builtin_or_exit(t_command *cmd, t_shell *shell);
 char			**build_argv(t_command *cmd);
 char			*resolve_path(const char *name);
-void			exec_external(t_command *cmd, t_shell *shell); // edited
+void			exec_external(t_command *cmd, t_shell *shell);
 void			child_exec_one(t_command *cmd, int in_fd, int out_fd,
-					t_shell *shell); // edited
-int				exec_single(t_command *cmd, t_shell *shell); // edited
+					t_shell *shell);
+int				exec_single(t_command *cmd, t_shell *shell);
 
 // Pipeline
 int				count_stages(t_command *head);
@@ -231,16 +231,16 @@ t_command		**build_stage_array(t_command *head, int n);
 void			make_pipes(int (*pipes)[2], int n);
 int				wait_for_children(pid_t *pids, int n);
 void			spawn_pipeline(t_command **st, int (*pipes)[2],
-					pid_t *pids, int n, t_shell *shell); // edited
+					pid_t *pids, int n, t_shell *shell);
 void			pipeline_child(t_command *cmd, int (*pipes)[2],
-					int idx, int total, t_shell *shell); // edited
+					int idx, int total, t_shell *shell);
 void			close_unused_pipes(int (*pipes)[2], int count, int in_fd,
 					int out_fd);
 void			close_all_pipes(int (*pipes)[2], int count);
 
 // Command Execution
-int				execute_command(t_command *cmd, t_shell *shell); // edited
-int				exec_pipeline(t_command *head, t_shell *shell); // edited
+int				execute_command(t_command *cmd, t_shell *shell);
+int				exec_pipeline(t_command *head, t_shell *shell);
 char			*find_executable(const char *name);
 
 // Utility Functions

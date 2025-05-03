@@ -6,14 +6,14 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 14:21:10 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/03 11:45:26 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/03 12:34:35 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
 
 void	spawn_pipeline(t_command **st, int (*pipes)[2], pid_t *pids,
-			int n, t_shell *shell) // edited
+			int n, t_shell *shell)
 {
 	int		i;
 	pid_t	pid;
@@ -60,7 +60,7 @@ static void	free_pipeline_resources(t_command **st, int (*pipes)[2],
 	free(pids);
 }
 
-int	exec_pipeline(t_command *head, t_shell *shell) // edited
+int	exec_pipeline(t_command *head, t_shell *shell)
 {
 	t_command	**st;
 	int			(*pipes)[2];

@@ -6,7 +6,7 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 14:21:10 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/03 11:42:46 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/03 12:34:25 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ int	count_stages(t_command *head)
 }
 
 void	pipeline_child(t_command *cmd, int (*pipes)[2], int idx,
-			int total, t_shell *shell) // edited
+			int total, t_shell *shell)
 {
 	int	in_fd;
 	int	out_fd;

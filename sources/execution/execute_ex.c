@@ -6,7 +6,7 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 13:47:36 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/03 11:23:01 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/03 12:34:14 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,7 +73,7 @@ char	*find_executable(const char *name)
 	return (result);
 }
 
-int	exec_single(t_command *cmd, t_shell *shell) // edited
+int	exec_single(t_command *cmd, t_shell *shell)
 {
 	pid_t	pid;
 	int		status;

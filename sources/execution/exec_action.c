@@ -6,15 +6,13 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 13:31:17 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/03 11:15:42 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/03 12:33:40 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
 
-// extern char	**environ;
-
-void	run_builtin_or_exit(t_command *cmd, t_shell *shell) // edited
+void	run_builtin_or_exit(t_command *cmd, t_shell *shell)
 {
 	if (is_builtin(cmd->cmd))
 		_exit(execute_builtin(cmd, shell));
@@ -66,7 +64,7 @@ char	*resolve_path(const char *name)
 	return (path);
 }
 
-void exec_external(t_command *cmd, t_shell *shell) //edited
+void exec_external(t_command *cmd, t_shell *shell)
 {
 	char		**argv;
 	char		*path;
@@ -88,7 +86,7 @@ void exec_external(t_command *cmd, t_shell *shell) //edited
 	_exit(127);
 }
 
-void	child_exec_one(t_command *cmd, int in_fd, int out_fd, t_shell *shell) // edited
+void	child_exec_one(t_command *cmd, int in_fd, int out_fd, t_shell *shell)
 {
 	handle_empty(cmd);
 	wire_pipes(in_fd, out_fd);

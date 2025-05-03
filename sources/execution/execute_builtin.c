@@ -6,13 +6,11 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 13:43:23 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/03 11:26:38 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/03 12:33:52 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
-
-// extern char	**environ;
 
 int	ft_strcmp(const char *s1, const char *s2)
 {

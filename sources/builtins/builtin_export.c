@@ -6,7 +6,7 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:08:44 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/03 10:32:26 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/03 12:32:43 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,6 @@ int	update_entry(char **env, int idx, const char *assignment)
 	new = ft_strdup (assignment);
 	if (!new)
 		return (1);
-	free(env[idx]);
 	env[idx] = new;
 	return (0);
 }
