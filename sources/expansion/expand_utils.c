@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   expand_utils.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/01 15:51:49 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 13:59:35 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/03 13:13:09 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ int	handle_dollar_expansion(t_exp_ctx *ctx)
 	}
 	if (ft_isalpha(c) || c == '_')
 	{
-		expand_dollar_env(ctx->src, &ctx->idx, ctx->buf, &ctx->pos);
+		expand_dollar_env(ctx->src, &ctx->idx, ctx->buf, &ctx->pos, ctx->envp);
 		return (1);
 	}
 	ctx->buf[ctx->pos++] = ctx->src[ctx->idx++];
@@ -62,7 +62,7 @@ void	handle_char_expansion(t_exp_ctx *ctx)
 	ctx->idx++;
 }
 
-void	process_expansion(const char *s, int last_status, char *buf)
+void	process_expansion(const char *s, int last_status, char *buf, char **envp)
 {
 	t_exp_ctx	ctx;
 
@@ -71,6 +71,7 @@ void	process_expansion(const char *s, int last_status, char *buf)
 	ctx.idx = 0;
 	ctx.pos = 0;
 	ctx.last_status = last_status;
+	ctx.envp = envp;
 	while (ctx.src[ctx.idx] != '\0')
 	{
 		if (handle_dollar_expansion(&ctx))

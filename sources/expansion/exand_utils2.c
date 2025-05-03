@@ -6,7 +6,7 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/01 15:51:49 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 15:28:36 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/03 13:27:23 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,20 +40,21 @@ void	expand_dollar_pid(char *buf, int *pos)
 	free(num);
 }
 
-void	expand_dollar_env(const char *s, int *idx, char *buf, int *pos)
+void	expand_dollar_env(const char *src, int *idx, char *buf, int *pos, char **envp)
 {
 	char	var[256];
 	int		k;
+	char	*val;
 
 	k = 0;
 	(*idx)++;
-	while ((ft_isalnum(s[*idx]) || s[*idx] == '_') && k < 255)
-		var[k++] = s[(*idx)++];
+	while ((ft_isalnum(src[*idx]) || src[*idx] == '_') && k < 255)
+		var[k++] = src[(*idx)++];
 	var[k] = '\0';
-	s = getenv(var);
-	if (s)
+	val = get_env_value(envp, var);
+	if (val)
 	{
-		ft_strlcpy(buf + *pos, s, ft_strlen(s) + 1);
-		*pos += ft_strlen(s);
+		ft_strlcpy(buf + *pos, val, ft_strlen(val) + 1);
+		*pos += ft_strlen(val);
 	}
 }

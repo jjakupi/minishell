@@ -6,7 +6,7 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 13:56:55 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/03 12:35:46 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/03 14:06:19 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,6 +96,7 @@ typedef struct s_exp_ctx
 	int			idx;
 	int			pos;
 	int			last_status;
+	char		**envp;
 }	t_exp_ctx;
 
 // Lexing (Tokenization) Functions
@@ -192,21 +193,27 @@ void			extract_key(const char *assignment, char *key);
 int				add_entry(char ***env_ptr, const char *entry);
 int				update_entry(char **env, int idx, const char *assignment);
 int				set_env_var(char ***env_ptr, const char *assignment);
+char			*get_append_key(const char *arg);
+char			*get_append_suffix(const char *arg);
+char			*build_appended_entry(char ***env, int idx,
+					const char *key, const char *suffix);
 
 // Variable Expansion
-char			*get_env_value(const char *var);
-char			*expand_argument(const char *arg, int last_exit_status);
-void			expand_command_arguments(t_command *cmd, int last_exit_status);
+char 			*get_env_value(char **envp, const char *key);
+char			*expand_argument(const char *arg, int last_exit_status, char **envp);
+void			expand_command_arguments(t_command *cmd, int last_exit_status, char **envp);
 void			normalize_empty_cmd(t_command *c);
 void			fix_empty_cmd(t_command *c);
 int				is_entirely_single_quoted(const char *arg, int len);
 char			*handle_single_quotes(const char *arg, int len);
 void			expand_dollar_question(int status, char *buf, int *pos);
 void			expand_dollar_pid(char *buf, int *pos);
-void			expand_dollar_env(const char *s, int *idx, char *buf, int *pos);
+void			expand_dollar_env(const char *src, int *idx, char *buf,
+					int *pos, char **envp);
 int				handle_dollar_expansion(t_exp_ctx *ctx);
 void			handle_char_expansion(t_exp_ctx *ctx);
-void			process_expansion(const char *s, int last_status, char *buf);
+void			process_expansion(const char *s, int last_status,
+					char *buf, char **envp);
 void			init_shlvl(void);
 
 /* exec_helper.c */
@@ -252,6 +259,10 @@ int				is_numeric(const char *str);
 char			*ft_strcpy(char *dest, const char *src);
 char			*ft_strndup(const char *s, size_t n);
 int				ft_strcmp(const char *s1, const char *s2);
+
+//Env utils
+char			**dup_envp(char **envp);
+void			free_envp(char **envp);
 
 //signals
 void			init_signals(void);
