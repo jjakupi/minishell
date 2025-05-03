@@ -13,53 +13,47 @@ static void	do_expansion(t_command *cmds, int last_status)
 	}
 }
 
-static void	shell_loop(void)
+static void shell_loop(t_shell *shell) //edited
 {
 	char		*input;
 	t_token		*tokens;
 	t_command	*cmds;
 	int			parse_status;
-	int			last_exit;
 
-	last_exit = 0;
 	while (1)
 	{
 		input = readline(PROMPT);
-		if (g_last_exit_status)
+		if (input == NULL)
 		{
-			last_exit = g_last_exit_status;
-			g_last_exit_status = 0;
+			printf("exit\n");
+			break ;
 		}
-		if (!input)
-		{
-			printf ("exit\n");
-			break;
-		}
-		if (input[0] == '\0')
-		{
-			free (input);
-			continue;
-		}
-		if (*input)
+		if (input[0] != '\0')
 			add_history(input);
 		tokens = tokenize(input);
 		parse_status = parse_pipeline(tokens, &cmds);
 		free_tokens(tokens);
 		if (parse_status == 0 && cmds)
 		{
-			do_expansion(cmds, last_exit);
-			last_exit = execute_command(cmds);
+			do_expansion(cmds, shell->last_exit);
+			shell->last_exit = execute_command(cmds, shell);
 			free_command(cmds);
 		}
 		else
-			last_exit = 2;
+			shell->last_exit = 2;
 		free(input);
 	}
 }
 
-int	main(void)
+int	main(int argc, char **argv, char **envp) // edited
 {
+	t_shell	shell;
+
+	(void)argc;
+	(void)argv;
 	init_signals();
-	shell_loop();
-	return (g_last_exit_status);
+	shell.envp = envp;
+	shell.last_exit = 0;
+	shell_loop(&shell);
+	return (shell.last_exit);
 }

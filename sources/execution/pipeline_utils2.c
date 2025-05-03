@@ -6,7 +6,7 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 14:21:10 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 14:30:19 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/03 11:42:46 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,8 @@ int	count_stages(t_command *head)
 	return (n);
 }
 
-void	pipeline_child(t_command *cmd, int (*pipes)[2], int idx, int total)
+void	pipeline_child(t_command *cmd, int (*pipes)[2], int idx,
+			int total, t_shell *shell) // edited
 {
 	int	in_fd;
 	int	out_fd;
@@ -39,6 +40,6 @@ void	pipeline_child(t_command *cmd, int (*pipes)[2], int idx, int total)
 	else
 		out_fd = -1;
 	close_unused_pipes(pipes, total - 1, in_fd, out_fd);
-	child_exec_one(cmd, in_fd, out_fd);
+	child_exec_one(cmd, in_fd, out_fd, shell);
 	_exit(1);
 }

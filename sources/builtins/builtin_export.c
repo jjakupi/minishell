@@ -3,18 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_export.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:08:44 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 17:48:43 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/03 10:32:26 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
 
-int update_entry(char **env, int idx, const char *assignment)
+int	update_entry(char **env, int idx, const char *assignment)
 {
-	char *new;
+	char	*new;
 
 	new = ft_strdup (assignment);
 	if (!new)
@@ -101,6 +101,8 @@ int	builtin_export(t_command *cmd, char ***env)
 {
 	int		i;
 	int		status;
+	char	*arg;
+	char	*plus;
 
 	status = 0;
 	if (cmd->arg_count == 0)
@@ -111,9 +113,6 @@ int	builtin_export(t_command *cmd, char ***env)
 	i = 0;
 	while (i < cmd->arg_count)
 	{
-		char	*arg;
-		char	*plus;
-
 		arg = cmd->args[i];
 		plus = ft_strchr(arg, '+');
 		if (plus != NULL && plus[1] == '=')

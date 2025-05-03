@@ -6,13 +6,11 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 13:47:36 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 13:59:35 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/03 11:23:01 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
-
-extern char	**environ;
 
 void	minishell_perror(const char *what)
 {
@@ -75,7 +73,7 @@ char	*find_executable(const char *name)
 	return (result);
 }
 
-int	exec_single(t_command *cmd)
+int	exec_single(t_command *cmd, t_shell *shell) // edited
 {
 	pid_t	pid;
 	int		status;
@@ -88,7 +86,7 @@ int	exec_single(t_command *cmd)
 		return (1);
 	}
 	if (pid == 0)
-		child_exec_one(cmd, -1, -1);
+		child_exec_one(cmd, -1, -1, shell);
 	status = 0;
 	waitpid(pid, &status, 0);
 	if (WIFEXITED(status))

@@ -6,13 +6,14 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 14:21:10 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 14:37:02 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/03 11:45:26 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
 
-void	spawn_pipeline(t_command **st, int (*pipes)[2], pid_t *pids, int n)
+void	spawn_pipeline(t_command **st, int (*pipes)[2], pid_t *pids,
+			int n, t_shell *shell) // edited
 {
 	int		i;
 	pid_t	pid;
@@ -24,7 +25,7 @@ void	spawn_pipeline(t_command **st, int (*pipes)[2], pid_t *pids, int n)
 		if (pid < 0)
 			return ;
 		if (pid == 0)
-			pipeline_child(st[i], pipes, i, n);
+			pipeline_child(st[i], pipes, i, n, shell);
 		pids[i] = pid;
 		i--;
 	}
@@ -59,7 +60,7 @@ static void	free_pipeline_resources(t_command **st, int (*pipes)[2],
 	free(pids);
 }
 
-int	exec_pipeline(t_command *head)
+int	exec_pipeline(t_command *head, t_shell *shell) // edited
 {
 	t_command	**st;
 	int			(*pipes)[2];
@@ -73,7 +74,7 @@ int	exec_pipeline(t_command *head)
 	if (n == 0)
 		return (0);
 	make_pipes(pipes, n - 1);
-	spawn_pipeline(st, pipes, pids, n);
+	spawn_pipeline(st, pipes, pids, n, shell);
 	close_all_pipes(pipes, n - 1);
 	status = wait_for_children(pids, n);
 	free_pipeline_resources(st, pipes, pids);

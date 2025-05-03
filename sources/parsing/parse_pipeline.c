@@ -6,7 +6,7 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/01 12:02:12 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/01 14:40:43 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/03 12:28:05 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,7 @@ static int	handle_pipe_split(t_token **startp, t_token **curp,
 		free_command(*head);
 		return (2);
 	}
+	prev->next = cur;
 	*startp = cur->next;
 	*curp = *startp;
 	return (0);

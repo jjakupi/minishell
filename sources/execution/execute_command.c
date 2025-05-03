@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execute_command.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 13:47:36 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 16:13:46 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/03 11:36:20 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,7 +83,7 @@ static void	restore_stdio(int saved_in, int saved_out)
 	}
 }
 
-static int	perform_builtin_with_redirs(t_command *cmd)
+static int	perform_builtin_with_redirs(t_command *cmd, t_shell *shell) // edited
 {
 	int	saved_in;
 	int	saved_out;
@@ -93,12 +93,12 @@ static int	perform_builtin_with_redirs(t_command *cmd)
 		return (1);
 	if (apply_input_redirs(cmd, saved_out, &saved_in) != 0)
 		return (1);
-	status = execute_builtin(cmd);
+	status = execute_builtin(cmd, shell);
 	restore_stdio(saved_in, saved_out);
 	return (status);
 }
 
-int	execute_command(t_command *cmd)
+int	execute_command(t_command *cmd, t_shell *shell) // edited
 {
 	int	status;
 	int	pipeline;
@@ -112,12 +112,12 @@ int	execute_command(t_command *cmd)
 	{
 		if (strcmp(cmd->cmd, "exit") == 0)
 			write(1, "exit\n", 5);
-		return (perform_builtin_with_redirs(cmd));
+		return (perform_builtin_with_redirs(cmd, shell));
 	}
 	if (pipeline)
-		status = exec_pipeline(cmd);
+		status = exec_pipeline(cmd, shell);
 	else
-		status = exec_single(cmd);
+		status = exec_single(cmd, shell);
 	return (status);
 }
 /*

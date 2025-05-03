@@ -6,18 +6,18 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 13:31:17 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 15:13:55 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/03 11:15:42 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
 
-extern char	**environ;
+// extern char	**environ;
 
-void	run_builtin_or_exit(t_command *cmd)
+void	run_builtin_or_exit(t_command *cmd, t_shell *shell) // edited
 {
 	if (is_builtin(cmd->cmd))
-		_exit(execute_builtin(cmd));
+		_exit(execute_builtin(cmd, shell));
 }
 
 char	**build_argv(t_command *cmd)
@@ -66,7 +66,7 @@ char	*resolve_path(const char *name)
 	return (path);
 }
 
-void	exec_external(t_command *cmd)
+void exec_external(t_command *cmd, t_shell *shell) //edited
 {
 	char		**argv;
 	char		*path;
@@ -81,20 +81,20 @@ void	exec_external(t_command *cmd)
 		ft_putendl_fd(": Is a directory", 2);
 		_exit(126);
 	}
-	execve(path, argv, environ);
+	execve(path, argv, shell->envp);
 	minishell_perror(cmd->cmd);
 	if (errno == EACCES || errno == EISDIR)
 		_exit(126);
 	_exit(127);
 }
 
-void	child_exec_one(t_command *cmd, int in_fd, int out_fd)
+void	child_exec_one(t_command *cmd, int in_fd, int out_fd, t_shell *shell) // edited
 {
 	handle_empty(cmd);
 	wire_pipes(in_fd, out_fd);
 	apply_output_redirects(cmd);
 	apply_input_redirects(cmd);
 	apply_heredoc(cmd);
-	run_builtin_or_exit(cmd);
-	exec_external(cmd);
+	run_builtin_or_exit(cmd, shell);
+	exec_external(cmd, shell);
 }

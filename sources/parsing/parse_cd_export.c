@@ -6,7 +6,7 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/01 11:29:22 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/01 11:30:05 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/03 12:19:38 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,11 +38,6 @@ t_command	*parse_cd(t_token *tokens)
 	t_command	*cmd;
 	t_token		*current;
 
-	if (tokens == NULL || ft_strcmp(tokens->value, "cd") != 0)
-	{
-		printf("minishell: Error: Expected cd command\n");
-		return (NULL);
-	}
 	cmd = create_command();
 	if (cmd == NULL)
 		return (NULL);
