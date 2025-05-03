@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_export_utils3.c                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:10:09 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/03 12:47:21 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/03 15:22:15 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@ int	update_entry(char **env, int idx, const char *assignment)
 	new = ft_strdup (assignment);
 	if (!new)
 		return (1);
+	free(env[idx]);
 	env[idx] = new;
 	return (0);
 }
@@ -45,48 +46,45 @@ int	set_env_var(char ***env_ptr, const char *assignment)
 	return (add_entry(env_ptr, assignment));
 }
 
-char	*get_append_key(const char *arg)
+char *get_append_key(const char *arg)
 {
-	char	*plus;
-	size_t	len;
+    char *plus = ft_strchr(arg, '+');
+    size_t len;
 
-	plus = ft_strchr(arg, '+');
-	if (plus == NULL)
-		return (NULL);
-	len = plus - arg;
-	return (ft_substr(arg, 0, len));
+    if (!plus || plus[1] != '=')
+        return NULL;
+    len = plus - arg;
+    char *key = malloc(len + 1);
+    if (!key)
+        return NULL;
+    memcpy(key, arg, len);
+    key[len] = '\0';
+    return key;
 }
 
-char	*get_append_suffix(const char *arg)
+char *get_append_suffix(const char *arg)
 {
-	char	*plus;
-
-	plus = ft_strchr(arg, '+');
-	if (plus == NULL || plus[1] != '+')
-		return (NULL);
-	return (ft_strdup(plus + 2));
+    char *plus = ft_strchr(arg, '+');
+    if (!plus || plus[1] != '=')
+        return NULL;
+    return ft_strdup(plus + 2);
 }
-
-char	*build_appended_entry(char ***env, int idx,
-			const char *key, const char *suffix)
+char *build_appended_entry(char ***env_ptr, int idx,
+	const char *key, const char *suffix)
 {
-	char	*oldval;
-	char	*tmp;
-	char	*prefix;
-	char	*res;
-
-	oldval = ft_strchr((*env)[idx], '=') + 1;
-	tmp = ft_strjoin(oldval, suffix);
-	if (tmp == NULL)
-		return (NULL);
-	prefix = ft_strjoin(key, "=");
-	if (prefix == NULL)
-	{
-		free(tmp);
-		return (NULL);
-	}
-	res = ft_strjoin(prefix, tmp);
-	free(tmp);
-	free(prefix);
-	return (res);
+char **env = *env_ptr;
+char *oldval = ft_strchr(env[idx], '=') + 1;
+char *tmp = ft_strjoin(oldval, suffix);
+if (!tmp)
+return NULL;
+char *eq = ft_strjoin(key, "=");
+if (!eq)
+{
+free(tmp);
+return NULL;
+}
+char *entry = ft_strjoin(eq, tmp);
+free(tmp);
+free(eq);
+return entry;
 }
