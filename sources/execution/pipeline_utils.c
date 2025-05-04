@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   pipeline_utils.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 14:19:41 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 14:20:53 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/04 19:38:42 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,9 +75,9 @@ void	close_unused_pipes(int (*pipes)[2], int count, int in_fd, int out_fd)
 	while (j < count)
 	{
 		if (pipes[j][0] != in_fd)
-			close(pipes[j][0]);
+		safe_close(pipes[j][0]);
 		if (pipes[j][1] != out_fd)
-			close(pipes[j][1]);
+			safe_close(pipes[j][1]);
 		j++;
 	}
 }
@@ -89,8 +89,8 @@ void	close_all_pipes(int (*pipes)[2], int count)
 	j = 0;
 	while (j < count)
 	{
-		close(pipes[j][0]);
-		close(pipes[j][1]);
+		safe_close(pipes[j][0]);
+		safe_close(pipes[j][1]);
 		j++;
 	}
 }

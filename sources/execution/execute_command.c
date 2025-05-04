@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execute_command.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 13:47:36 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/03 12:36:49 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/04 19:38:33 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ static int	apply_output_redirs(t_command *cmd, int *saved_out)
 		}
 		*saved_out = dup(STDOUT_FILENO);
 		dup2(fd, STDOUT_FILENO);
-		close(fd);
+		safe_close(fd);
 		i++;
 	}
 	return (0);
@@ -57,13 +57,13 @@ static int	apply_input_redirs(t_command *cmd, int saved_out, int *saved_in)
 			if (saved_out >= 0)
 			{
 				dup2(saved_out, STDOUT_FILENO);
-				close(saved_out);
+				safe_close(saved_out);
 			}
 			return (1);
 		}
 		*saved_in = dup(STDIN_FILENO);
 		dup2(fd, STDIN_FILENO);
-		close(fd);
+		safe_close(fd);
 		i++;
 	}
 	return (0);
@@ -74,12 +74,12 @@ static void	restore_stdio(int saved_in, int saved_out)
 	if (saved_in >= 0)
 	{
 		dup2(saved_in, STDIN_FILENO);
-		close(saved_in);
+		safe_close(saved_in);
 	}
 	if (saved_out >= 0)
 	{
 		dup2(saved_out, STDOUT_FILENO);
-		close(saved_out);
+		safe_close(saved_out);
 	}
 }
 

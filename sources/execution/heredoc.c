@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   heredoc.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 13:32:21 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 13:42:16 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/04 19:38:39 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,9 +42,9 @@ void	read_heredoc_lines(const char *delim, int write_end)
 
 void	redirect_heredoc_input(int hp[2])
 {
-	close(hp[1]);
+	safe_close(hp[1]);
 	dup2(hp[0], STDIN_FILENO);
-	close(hp[0]);
+	safe_close(hp[1]);
 }
 
 void	apply_heredoc(t_command *cmd)

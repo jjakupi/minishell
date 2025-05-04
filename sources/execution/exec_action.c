@@ -6,7 +6,7 @@
 /*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 13:31:17 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/04 18:10:35 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/04 19:38:18 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,14 +86,23 @@ void exec_external(t_command *cmd, t_shell *shell)
 	_exit(127);
 }
 
-void	child_exec_one(t_command *cmd, int in_fd, int out_fd, t_shell *shell)
+void child_redirect_heredoc(int read_end)
 {
-	handle_empty(cmd);
-	wire_pipes(in_fd, out_fd);
+    dup2(read_end, STDIN_FILENO);
+    safe_close(read_end);
+}
+void child_exec_one(t_command *cmd, int in_fd, int out_fd, t_shell *shell)
+{
+    handle_empty(cmd);
+    wire_pipes(in_fd, out_fd);
+
 	if (cmd->has_heredoc)
-		apply_heredoc(cmd);
-	apply_output_redirects(cmd);
-	apply_input_redirects(cmd);
-	run_builtin_or_exit(cmd, shell);
-	exec_external(cmd, shell);
+    {
+        child_redirect_heredoc(cmd->heredoc_fd);
+    }
+    apply_output_redirects(cmd);
+    apply_input_redirects(cmd);
+    run_builtin_or_exit(cmd, shell);
+    exec_external(cmd, shell);
+    _exit(127);
 }

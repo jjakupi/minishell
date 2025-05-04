@@ -6,7 +6,7 @@
 /*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 13:56:55 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/03 15:21:11 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/04 19:38:10 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,20 +71,17 @@ typedef struct s_command
 {
 	char				*cmd;
 	int					suppress_newline;
-	// argv
 	char				**args;
 	int					arg_count;
-	// all '<' redirections, in parse order
 	char				**in_files;
 	int					in_count;
-	// all '>' / '>>' redirections, in parse order
 	char				**out_files;
 	int					out_count;
-	int					*append_flags; // parallel array: 0=truncate, 1=append
-	// here-doc
+	int					*append_flags;
 	char				*heredoc_delimiter;
 	int					has_heredoc;
 	int					expand_heredoc;
+	int					heredoc_fd;
 	struct s_command	*next;
 }	t_command;
 
@@ -97,8 +94,15 @@ typedef struct s_exp_ctx
 	int			pos;
 	int			last_status;
 	char		**envp;
+	int			in_single;
+	int			in_double;
 }	t_exp_ctx;
 
+static inline void safe_close(int fd)
+{
+    if (fd >= 0)
+        close(fd);
+}
 // Lexing (Tokenization) Functions
 t_token			*tokenize(const char *input);
 t_token			*new_token(t_token_type type, const char *value);
@@ -150,6 +154,7 @@ int				parse_output_redirection(t_command *cmd, t_token **current);
 int				parse_append_redirection(t_command *cmd, t_token **current);
 int				parse_heredoc(t_command *cmd, t_token **current);
 int				set_redirection_file(char **dest, char *src);
+void			read_heredoc_lines(const char *delim, int write_end);
 
 // Built-in Commands
 t_command		*parse_echo(t_token *tokens);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   exec_helper.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 13:32:21 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 13:45:48 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/04 19:38:29 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,12 +23,12 @@ void	wire_pipes(int in_fd, int out_fd)
 	if (out_fd >= 0)
 	{
 		dup2(out_fd, STDOUT_FILENO);
-		close(out_fd);
+		safe_close(out_fd);
 	}
 	if (in_fd >= 0)
 	{
 		dup2(in_fd, STDIN_FILENO);
-		close(in_fd);
+		safe_close(in_fd);
 	}
 }
 
@@ -54,7 +54,7 @@ void	apply_output_redirects(t_command *cmd)
 		}
 		if (i == cmd->out_count - 1)
 			dup2(fd, STDOUT_FILENO);
-		close(fd);
+		safe_close(fd);
 		i++;
 	}
 }
@@ -75,7 +75,7 @@ void	apply_input_redirects(t_command *cmd)
 		}
 		if (i == cmd->in_count - 1)
 			dup2(fd, STDIN_FILENO);
-		close(fd);
+		safe_close(fd);
 		i++;
 	}
 }

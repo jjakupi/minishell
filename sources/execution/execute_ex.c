@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execute_ex.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 13:47:36 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/03 12:34:14 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/04 19:38:36 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,25 +73,44 @@ char	*find_executable(const char *name)
 	return (result);
 }
 
-int	exec_single(t_command *cmd, t_shell *shell)
+int exec_single(t_command *cmd, t_shell *shell)
 {
-	pid_t	pid;
-	int		status;
-	int		exit_code;
+    pid_t pid;
+    int   status;
+    int   exit_code;
+    int   old_stdin;
 
-	pid = fork();
-	if (pid < 0)
-	{
-		minishell_perror("fork");
-		return (1);
-	}
-	if (pid == 0)
-		child_exec_one(cmd, -1, -1, shell);
-	status = 0;
-	waitpid(pid, &status, 0);
-	if (WIFEXITED(status))
-		exit_code = WEXITSTATUS(status);
-	else
-		exit_code = 1;
-	return (exit_code);
+	old_stdin = -1;
+    // 1) If there's a here-doc, read it into a pipe and
+    //    hijack stdin in the parent:
+    if (cmd->has_heredoc)
+    {
+        int hp[2];
+        old_stdin = dup(STDIN_FILENO);
+        if (pipe(hp) < 0)
+            return (minishell_perror("pipe"), 1);
+        read_heredoc_lines(cmd->heredoc_delimiter, hp[1]);
+        safe_close(hp[1]);
+        dup2(hp[0], STDIN_FILENO);
+        safe_close(hp[1]);
+    }
+
+    // 2) Fork as usual
+    pid = fork();
+    if (pid < 0)
+        return (minishell_perror("fork"), 1);
+
+    if (pid == 0)
+        child_exec_one(cmd, -1, -1, shell);
+
+    // 3) Parent: restore its real stdin immediately
+    if (cmd->has_heredoc)
+    {
+        dup2(old_stdin, STDIN_FILENO);
+        safe_close(old_stdin);
+    }
+
+    waitpid(pid, &status, 0);
+    exit_code = WIFEXITED(status) ? WEXITSTATUS(status) : 1;
+    return exit_code;
 }
