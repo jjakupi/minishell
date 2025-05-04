@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parse_pipeline.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/01 12:02:12 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/03 12:28:05 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/04 16:07:58 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ static int	handle_pipe_split(t_token **startp, t_token **curp,
 	start = *startp;
 	cur = *curp;
 	prev = find_prev_pipe(start, cur);
-	if (prev == start)
+	if (start == cur)
 	{
 		printf("minishell: syntax error near unexpected token `|'\n");
 		free_command(*head);
