@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   expand_var.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/01 15:51:49 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/03 13:49:17 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/04 17:39:56 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,25 +43,38 @@ char	*expand_argument(const char *arg, int last_exit_status, char **envp)
 	return (ft_strdup(buf));
 }
 
-void	expand_command_arguments(t_command *cmd, int last_exit_status, char **envp)
+static void	expand_list(char **arr, int count,
+	int last_status, char **envp)
 {
 	int		i;
-	char	*expanded;
+	char	*exp;
 
-	if (cmd == NULL)
-		return ;
-	if (cmd->cmd != NULL)
-	{
-		expanded = expand_argument(cmd->cmd, last_exit_status, envp);
-		free(cmd->cmd);
-		cmd->cmd = expanded;
-	}
 	i = 0;
-	while (i < cmd->arg_count)
+	while (i < count)
 	{
-		expanded = expand_argument(cmd->args[i], last_exit_status, envp);
-		free(cmd->args[i]);
-		cmd->args[i] = expanded;
+		exp = expand_argument(arr[i], last_status, envp);
+		free(arr[i]);
+		arr[i] = exp;
 		i++;
 	}
+}
+
+void	expand_command_arguments(t_command *cmd,
+int last_exit_status, char **envp)
+{
+	if (!cmd)
+		return ;
+	if (cmd->cmd)
+	{
+		char *x = expand_argument(cmd->cmd,
+					last_exit_status, envp);
+		free(cmd->cmd);
+		cmd->cmd = x;
+	}
+	expand_list(cmd->args,      cmd->arg_count,
+				last_exit_status, envp);
+	expand_list(cmd->in_files,  cmd->in_count,
+				last_exit_status, envp);
+	expand_list(cmd->out_files, cmd->out_count,
+				last_exit_status, envp);
 }
