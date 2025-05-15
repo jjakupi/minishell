@@ -3,35 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   pipeline_utils.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 14:19:41 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/04 19:38:42 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/15 15:49:20 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
-
-t_command	**build_stage_array(t_command *head, int n)
-{
-	t_command	**arr;
-	int			i;
-
-	arr = malloc(n * sizeof(*arr));
-	if (arr == NULL)
-	{
-		perror("malloc");
-		exit(EXIT_FAILURE);
-	}
-	i = 0;
-	while (i < n)
-	{
-		arr[i] = head;
-		head = head->next;
-		i++;
-	}
-	return (arr);
-}
 
 void	make_pipes(int (*pipes)[2], int n)
 {
@@ -75,7 +54,7 @@ void	close_unused_pipes(int (*pipes)[2], int count, int in_fd, int out_fd)
 	while (j < count)
 	{
 		if (pipes[j][0] != in_fd)
-		safe_close(pipes[j][0]);
+			safe_close(pipes[j][0]);
 		if (pipes[j][1] != out_fd)
 			safe_close(pipes[j][1]);
 		j++;
@@ -93,4 +72,12 @@ void	close_all_pipes(int (*pipes)[2], int count)
 		safe_close(pipes[j][1]);
 		j++;
 	}
+}
+
+void	free_pipeline_resources(t_command **st, int (*pipes)[2],
+			pid_t *pids)
+{
+	free(st);
+	free(pipes);
+	free(pids);
 }

@@ -3,104 +3,98 @@
 /*                                                        :::      ::::::::   */
 /*   pipeline.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 14:21:10 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/04 19:38:50 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/15 15:45:59 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
 
-
-void	spawn_pipeline(t_command **st, int (*pipes)[2], pid_t *pids,
-			int n, t_shell *shell)
+t_command	**build_stage_array(t_command *head, int n)
 {
-	int		i;
-	pid_t	pid;
+	t_command	**arr;
+	int			i;
 
-	i = n - 1;
-	while (i >= 0)
+	arr = malloc(n * sizeof(*arr));
+	if (arr == NULL)
 	{
-		pid = fork();
-		if (pid < 0)
-			return ;
-		if (pid == 0)
-			pipeline_child(st[i], pipes, i, n, shell);
-		pids[i] = pid;
-		i--;
+		perror("malloc");
+		exit(EXIT_FAILURE);
 	}
+	i = 0;
+	while (i < n)
+	{
+		arr[i] = head;
+		head = head->next;
+		i++;
+	}
+	return (arr);
 }
 
-static int	alloc_pipeline_resources(t_command *head,
-		t_command ***stp, int (**pipes)[2], pid_t **pidsp)
+static int	pipeline_setup(t_command *head, t_shell *shell, t_command ***stp,
+				pid_t **pidsp)
 {
+	int	(*pipes)[2];
 	int	n;
 
-	n = count_stages(head);
+	n = alloc_pipeline_resources(head, stp, &pipes, pidsp);
 	if (n <= 0)
 		return (n);
-	*stp = build_stage_array(head, n);
-	*pipes = malloc((n - 1) * sizeof(**pipes));
-	if (*pipes == NULL)
-		return (-1);
-	*pidsp = malloc(n * sizeof(**pidsp));
-	if (*pidsp == NULL)
-	{
-		free(*pipes);
-		return (-1);
-	}
+	shell->pipes = pipes;
+	shell->pipe_count = n - 1;
+	make_pipes(pipes, n - 1);
 	return (n);
 }
 
-static void	free_pipeline_resources(t_command **st, int (*pipes)[2],
-	pid_t *pids)
+static int	pipeline_heredoc_in(t_command *head, int *old_stdin)
 {
-	free(st);
-	free(pipes);
-	free(pids);
+	int	hp[2];
+
+	*old_stdin = -1;
+	if (!head->has_heredoc)
+		return (0);
+	*old_stdin = dup(STDIN_FILENO);
+	if (*old_stdin < 0)
+		return (minishell_perror("dup"), 1);
+	if (pipe(hp) < 0)
+		exit_with_error("pipe");
+	read_heredoc_lines(head->heredoc_delimiter, hp[1]);
+	safe_close(hp[1]);
+	dup2(hp[0], STDIN_FILENO);
+	safe_close(hp[0]);
+	return (0);
 }
 
-int exec_pipeline(t_command *head, t_shell *shell)
+static void	pipeline_heredoc_out(int old_stdin)
 {
-    t_command **st;
-    int (*pipes)[2];
-    pid_t *pids;
-    int    n, status;
-    int    old_stdin;
-
-    n = alloc_pipeline_resources(head, &st, &pipes, &pids);
-    if (n < 0) return 1;
-    if (n == 0) return 0;
-
-    make_pipes(pipes, n - 1);
-
-    // 1) If the *first* stage has a here-doc, do the same hijack trick:
-    if (head->has_heredoc)
-    {
-        int hp[2];
-        old_stdin = dup(STDIN_FILENO);
-        if (pipe(hp) < 0)
-            exit_with_error("pipe");
-        read_heredoc_lines(head->heredoc_delimiter, hp[1]);
-        safe_close(hp[1]);
-        dup2(hp[0], STDIN_FILENO);
-        safe_close(hp[0]);
-    }
-
-    // 2) Now spawn the pipeline children; they inherit stdin→heredoc
-    spawn_pipeline(st, pipes, pids, n, shell);
-
-    // 3) Parent restores its real stdin immediately
-    if (head->has_heredoc)
-    {
-        dup2(old_stdin, STDIN_FILENO);
-        safe_close(old_stdin);
-    }
-
-    close_all_pipes(pipes, n - 1);
-    status = wait_for_children(pids, n);
-    free_pipeline_resources(st, pipes, pids);
-    return status;
+	if (old_stdin >= 0)
+	{
+		dup2(old_stdin, STDIN_FILENO);
+		safe_close(old_stdin);
+	}
 }
 
+int	exec_pipeline(t_command *head, t_shell *shell)
+{
+	t_command	**st;
+	pid_t		*pids;
+	int			n;
+	int			status;
+	int			old_stdin;
+
+	n = pipeline_setup(head, shell, &st, &pids);
+	if (n < 0)
+		return (1);
+	if (n == 0)
+		return (0);
+	if (pipeline_heredoc_in(head, &old_stdin))
+		return (1);
+	spawn_pipeline(st, pids, shell);
+	pipeline_heredoc_out(old_stdin);
+	close_all_pipes(shell->pipes, shell->pipe_count);
+	status = wait_for_children(pids, n);
+	free_pipeline_resources(st, shell->pipes, pids);
+	return (status);
+}

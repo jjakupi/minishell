@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/05/15 17:03:03 by julrusse          #+#    #+#             */
+/*   Updated: 2025/05/15 17:07:04 by julrusse         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/minishell.h"
 
 static void	do_expansion(t_command *cmds, int last_status, char **envp)
@@ -13,12 +25,30 @@ static void	do_expansion(t_command *cmds, int last_status, char **envp)
 	}
 }
 
-static void shell_loop(t_shell *shell)
+static void	handle_line(t_shell *shell, char *input)
 {
-	char		*input;
 	t_token		*tokens;
 	t_command	*cmds;
 	int			parse_status;
+
+	if (input[0] != '\0')
+		add_history(input);
+	tokens = tokenize(input);
+	parse_status = parse_pipeline(tokens, &cmds);
+	free_tokens(tokens);
+	if (parse_status == 0 && cmds)
+	{
+		do_expansion(cmds, shell->last_exit, shell->envp);
+		shell->last_exit = execute_command(cmds, shell);
+		free_command(cmds);
+	}
+	else
+		shell->last_exit = 2;
+}
+
+static void	shell_loop(t_shell *shell)
+{
+	char	*input;
 
 	while (1)
 	{
@@ -28,19 +58,7 @@ static void shell_loop(t_shell *shell)
 			printf("exit\n");
 			break ;
 		}
-		if (input[0] != '\0')
-			add_history(input);
-		tokens = tokenize(input);
-		parse_status = parse_pipeline(tokens, &cmds);
-		free_tokens(tokens);
-		if (parse_status == 0 && cmds)
-		{
-			do_expansion(cmds, shell->last_exit, shell->envp);
-			shell->last_exit = execute_command(cmds, shell);
-			free_command(cmds);
-		}
-		else
-			shell->last_exit = 2;
+		handle_line(shell, input);
 		free(input);
 	}
 }

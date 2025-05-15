@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   expand_var.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/01 15:51:49 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/04 19:23:34 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/15 16:57:44 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,22 +59,24 @@ static void	expand_list(char **arr, int count,
 	}
 }
 
-void	expand_command_arguments(t_command *cmd,
-int last_exit_status, char **envp)
+void	expand_command_arguments(t_command *cmd, int last_exit_status,
+			char **envp)
 {
+	char	*x;
+
 	if (!cmd)
 		return ;
 	if (cmd->cmd)
 	{
-		char *x = expand_argument(cmd->cmd,
-					last_exit_status, envp);
+		x = expand_argument(cmd->cmd,
+				last_exit_status, envp);
 		free(cmd->cmd);
 		cmd->cmd = x;
 	}
-	expand_list(cmd->args,      cmd->arg_count,
-				last_exit_status, envp);
-	expand_list(cmd->in_files,  cmd->in_count,
-				last_exit_status, envp);
+	expand_list(cmd->args, cmd->arg_count,
+		last_exit_status, envp);
+	expand_list(cmd->in_files, cmd->in_count,
+		last_exit_status, envp);
 	expand_list(cmd->out_files, cmd->out_count,
-				last_exit_status, envp);
+		last_exit_status, envp);
 }

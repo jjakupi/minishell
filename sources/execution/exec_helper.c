@@ -3,14 +3,20 @@
 /*                                                        :::      ::::::::   */
 /*   exec_helper.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 13:32:21 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/04 19:38:29 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/15 15:41:31 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
+
+void	child_redirect_heredoc(int read_end)
+{
+	dup2(read_end, STDIN_FILENO);
+	safe_close(read_end);
+}
 
 void	handle_empty(t_command *cmd)
 {

@@ -6,7 +6,7 @@
 /*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/01 11:34:46 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/01 15:34:01 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/15 17:00:24 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,63 +97,3 @@ t_command	*parse_echo(t_token *tokens)
 	}
 	return (cmd);
 }
-/*
-t_command *parse_echo(t_token *tokens)
-{
-	t_command *cmd = create_command();
-	if (!cmd)
-		return NULL;
-
-	cmd->cmd = ft_strdup("echo");
-	if (!cmd->cmd)
-	{
-		free_command(cmd);
-		return NULL;
-	}
-
-	tokens = tokens->next; // explicitly skip "echo" token
-
-	while (tokens)
-	{
-		if (tokens->type == WORD || tokens->type == ENV_VAR)
-		{
-			add_argument(cmd, tokens->value);
-			tokens = tokens->next;
-		}
-		else if (tokens->type == REDIR_IN || tokens->type == REDIR_OUT ||
-				 tokens->type == REDIR_APPEND || tokens->type == HEREDOC)
-		{
-			if (!tokens->next || tokens->next->type != WORD)
-			{
-				printf
-					("minishell: syntax error near unexpected token `newline'\n");
-				free_command(cmd);
-				return NULL;
-			}
-			// If valid syntax, process redirections explicitly
-			if ((tokens->type == REDIR_OUT
-				&& parse_output_redirection(cmd, &tokens) == -1) ||
-				(tokens->type == REDIR_APPEND
-					&& parse_append_redirection(cmd, &tokens) == -1) ||
-				(tokens->type == REDIR_IN
-					&& parse_input_redirection(cmd, &tokens) == -1) ||
-				(tokens->type == HEREDOC && parse_heredoc(cmd, &tokens) == -1))
-			{
-				free_command(cmd);
-				return NULL;
-			}
-		}
-		else if (tokens->type == PIPE)
-		{
-			printf("minishell: syntax error near unexpected token `|'\n");
-			free_command(cmd);
-			return NULL;
-		}
-		else
-		{
-			tokens = tokens->next;
-		}
-	}
-	return cmd;
-}
-*/

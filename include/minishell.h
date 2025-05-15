@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 13:56:55 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/04 19:38:10 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/15 17:10:45 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,7 @@
 # define MINISHELL_H
 
 // Terminal prompt color definitions
-# define GREEN "\001\033[1;32m\002"
-# define RESET "\001\033[0m\002"
-# define PROMPT GREEN "Minishell:~$ " RESET
+# define PROMPT "\001\033[1;32m\002Minishell:~$ \001\033[0m\002"
 # define MAX_PATH 4096
 
 // Standard includes
@@ -43,6 +41,8 @@ typedef struct s_shell
 {
 	char	**envp;
 	int		last_exit;
+	int		(*pipes)[2];
+	int		pipe_count;
 }	t_shell;
 
 // Token types
@@ -98,11 +98,12 @@ typedef struct s_exp_ctx
 	int			in_double;
 }	t_exp_ctx;
 
-static inline void safe_close(int fd)
+static inline void	safe_close(int fd)
 {
-    if (fd >= 0)
-        close(fd);
+	if (fd >= 0)
+		close(fd);
 }
+
 // Lexing (Tokenization) Functions
 t_token			*tokenize(const char *input);
 t_token			*new_token(t_token_type type, const char *value);
@@ -113,13 +114,13 @@ int				is_special(char c);
 char			*append_char(char *str, char c);
 void			flush_current_arg(t_token **tokens, char **current_arg);
 void			process_whitespace(int *i, t_token **tokens,
-					char **current_arg);
+						char **current_arg);
 int				handle_double_special(const char *input,
-					int *i, t_token **tokens);
+						int *i, t_token **tokens);
 void			handle_single_special(const char *input,
-					int *i, t_token **tokens);
+						int *i, t_token **tokens);
 void			process_special(const char *input, int *i, t_token **tokens,
-					char **current_arg);
+						char **current_arg);
 char			*build_wrapped(const char *start_ptr, int len, char quote);
 void			append_wrapped(char **current_arg, const char *wrapped);
 int				process_quotes(const char *input, int *i, char **current_arg);
@@ -201,24 +202,25 @@ int				set_env_var(char ***env_ptr, const char *assignment);
 char			*get_append_key(const char *arg);
 char			*get_append_suffix(const char *arg);
 char			*build_appended_entry(char ***env, int idx,
-					const char *key, const char *suffix);
+						const char *key, const char *suffix);
 
 // Variable Expansion
-char 			*get_env_value(char **envp, const char *key);
-char			*expand_argument(const char *arg, int last_exit_status, char **envp);
-void			expand_command_arguments(t_command *cmd, int last_exit_status, char **envp);
+char			*get_env_value(char **envp, const char *key);
+char			*expand_argument(const char *arg, int last_exit_status,
+						char **envp);
+void			expand_command_arguments(t_command *cmd, int last_exit_status,
+						char **envp);
 void			normalize_empty_cmd(t_command *c);
 void			fix_empty_cmd(t_command *c);
 int				is_entirely_single_quoted(const char *arg, int len);
 char			*handle_single_quotes(const char *arg, int len);
 void			expand_dollar_question(int status, char *buf, int *pos);
 void			expand_dollar_pid(char *buf, int *pos);
-void			expand_dollar_env(const char *src, int *idx, char *buf,
-					int *pos, char **envp);
+void			expand_dollar_env(t_exp_ctx *ctx);
 int				handle_dollar_expansion(t_exp_ctx *ctx);
 void			handle_char_expansion(t_exp_ctx *ctx);
 void			process_expansion(const char *s, int last_status,
-					char *buf, char **envp);
+						char *buf, char **envp);
 void			init_shlvl(void);
 
 /* exec_helper.c */
@@ -234,21 +236,26 @@ char			**build_argv(t_command *cmd);
 char			*resolve_path(const char *name);
 void			exec_external(t_command *cmd, t_shell *shell);
 void			child_exec_one(t_command *cmd, int in_fd, int out_fd,
-					t_shell *shell);
+						t_shell *shell);
+int				handle_heredoc_redir(t_command *cmd, int *old_stdin);
 int				exec_single(t_command *cmd, t_shell *shell);
+void			child_redirect_heredoc(int read_end);
 
 // Pipeline
 int				count_stages(t_command *head);
 t_command		**build_stage_array(t_command *head, int n);
 void			make_pipes(int (*pipes)[2], int n);
 int				wait_for_children(pid_t *pids, int n);
-void			spawn_pipeline(t_command **st, int (*pipes)[2],
-					pid_t *pids, int n, t_shell *shell);
-void			pipeline_child(t_command *cmd, int (*pipes)[2],
-					int idx, int total, t_shell *shell);
+void			spawn_pipeline(t_command **st, pid_t *pids, t_shell *shell);
+void			pipeline_child(t_command *cmd, int in_fd, int out_fd,
+						t_shell *shell);
 void			close_unused_pipes(int (*pipes)[2], int count, int in_fd,
-					int out_fd);
+						int out_fd);
 void			close_all_pipes(int (*pipes)[2], int count);
+int				alloc_pipeline_resources(t_command *head, t_command ***stp,
+						int (**pipes)[2], pid_t **pidsp);
+void			free_pipeline_resources(t_command **st, int (*pipes)[2],
+						pid_t *pids);
 
 // Command Execution
 int				execute_command(t_command *cmd, t_shell *shell);

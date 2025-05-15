@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   command_add_create.c                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 11:20:19 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/04 19:16:47 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/15 14:14:00 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ t_command	*create_command(void)
 {
 	t_command	*cmd;
 
-	cmd = ft_calloc(1, sizeof *cmd);
+	cmd = ft_calloc(1, sizeof(*cmd));
 	if (!cmd)
 		return (NULL);
 	cmd->cmd = NULL;
@@ -68,7 +68,7 @@ t_command	*create_command(void)
 	cmd->heredoc_delimiter = NULL;
 	cmd->has_heredoc = 0;
 	cmd->expand_heredoc = 0;
-	cmd->heredoc_fd		= -1;
+	cmd->heredoc_fd = -1;
 	cmd->next = NULL;
 	return (cmd);
 }

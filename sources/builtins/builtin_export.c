@@ -3,90 +3,111 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_export.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
+/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 12:08:44 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/04 19:09:30 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/15 14:06:02 by julrusse         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
 
-static int handle_export_append(char *arg, char ***env)
+static int	append_to_existing(char ***env, const char *key,
+				const char *suffix)
 {
-    char *key = get_append_key(arg);
-    if (!key)
-        return 1;
-    char *suffix = get_append_suffix(arg);
-    if (!suffix)
-        return (free(key), 1);
+	char	*entry;
+	int		idx;
+	int		ret;
 
-    int idx = env_op(*env, key, 1);
-    if (idx >= 0)
-    {
-        char *entry = build_appended_entry(env, idx, key, suffix);
-        free(key);
-        free(suffix);
-        if (!entry)
-            return 1;
-        update_entry(*env, idx, entry);
-        free(entry);
-        return 0;
-    }
-
-    // idx < 0: variable not present, create new KEY=suffix entry
-    {
-        char *eq = ft_strjoin(key, "=");
-        if (!eq)
-        {
-            free(key);
-            free(suffix);
-            return 1;
-        }
-        char *new_entry = ft_strjoin(eq, suffix);
-        free(eq);
-        free(key);
-        free(suffix);
-        if (!new_entry)
-            return 1;
-        int ret = set_env_var(env, new_entry);
-        free(new_entry);
-        return ret;
-    }
+	idx = env_op(*env, key, 1);
+	entry = build_appended_entry(env, idx, (char *)key, (char *)suffix);
+	if (entry == NULL)
+		return (1);
+	update_entry(*env, idx, entry);
+	free(entry);
+	ret = 0;
+	return (ret);
 }
 
-static int handle_export_token(char *arg, char ***env)
+static int	add_new_appended(char ***env, const char *key, const char *suffix)
+{
+	char	*eq;
+	char	*entry;
+	int		ret;
+
+	eq = ft_strjoin(key, "=");
+	if (eq == NULL)
+		return (1);
+	entry = ft_strjoin(eq, suffix);
+	free(eq);
+	if (entry == NULL)
+		return (1);
+	ret = set_env_var(env, entry);
+	free(entry);
+	return (ret);
+}
+
+static int	handle_export_append(char *arg, char ***env)
+{
+	char	*key;
+	char	*suffix;
+	int		idx;
+	int		ret;
+
+	key = get_append_key(arg);
+	if (key == NULL)
+		return (1);
+	suffix = get_append_suffix(arg);
+	if (suffix == NULL)
+	{
+		free(key);
+		return (1);
+	}
+	idx = env_op(*env, key, 1);
+	if (idx >= 0)
+		ret = append_to_existing(env, key, suffix);
+	else
+		ret = add_new_appended(env, key, suffix);
+	free(key);
+	free(suffix);
+	return (ret);
+}
+
+static int	handle_export_token(char *arg, char ***env)
 {
 	if (!is_valid_export_token(arg))
 	{
 		ft_putstr_fd("export: `", 2);
 		ft_putstr_fd(arg, 2);
 		ft_putendl_fd("': not a valid identifier", 2);
-	return 1;
-    }
-    return (set_env_var(env, arg) != 0);
+		return (1);
+	}
+	return (set_env_var(env, arg) != 0);
 }
 
-int builtin_export(t_command *cmd, char ***env)
+int	builtin_export(t_command *cmd, char ***env)
 {
-    int status = 0;
-    if (cmd->arg_count == 0)
-    {
-        print_sorted_env(*env);
-        return 0;
-    }
-    for (int i = 0; i < cmd->arg_count; i++)
-    {
-        char *arg = cmd->args[i];
-        char *plus = ft_strchr(arg, '+');
-        if (plus && plus[1] == '=')
-        {
-            if (handle_export_append(arg, env))
-                status = 1;
-        }
-        else if (handle_export_token(arg, env))
-            status = 1;
-    }
-    return status;
-}
+	int		status;
+	int		i;
+	char	*arg;
+	char	*plus;
 
+	status = 0;
+	if (cmd->arg_count == 0)
+		return (print_sorted_env(*env), 0);
+	i = 0;
+	while (i < cmd->arg_count)
+	{
+		arg = cmd->args[i];
+		plus = ft_strchr(arg, '+');
+		if (plus != NULL && plus[1] == '=')
+		{
+			if (handle_export_append(arg, env))
+				status = 1;
+		}
+		else if (handle_export_token(arg, env))
+			status = 1;
+		i++;
+	}
+	return (status);
+}
