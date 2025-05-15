@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/15 17:03:03 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/15 17:07:04 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/15 19:57:07 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ static void	handle_line(t_shell *shell, char *input)
 	t_command	*cmds;
 	int			parse_status;
 
+	cmds = NULL;
 	if (input[0] != '\0')
 		add_history(input);
 	tokens = tokenize(input);
@@ -43,7 +44,15 @@ static void	handle_line(t_shell *shell, char *input)
 		free_command(cmds);
 	}
 	else
-		shell->last_exit = 2;
+	{
+		if (g_last_exit_status)
+		{
+			shell->last_exit = g_last_exit_status;
+			g_last_exit_status = 0;
+		}
+		else
+			shell->last_exit = 2;
+	}
 }
 
 static void	shell_loop(t_shell *shell)
@@ -56,7 +65,12 @@ static void	shell_loop(t_shell *shell)
 		if (input == NULL)
 		{
 			printf("exit\n");
-			break ;
+			break;
+		}
+		if (g_last_exit_status)
+		{
+			shell->last_exit = g_last_exit_status;
+			g_last_exit_status = 0;
 		}
 		handle_line(shell, input);
 		free(input);
