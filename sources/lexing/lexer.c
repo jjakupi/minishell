@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   lexer.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/25 16:28:08 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/01 15:32:22 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/16 11:57:15 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,34 +50,3 @@ t_token	*tokenize(const char *input)
 	flush_current_arg(&tokens, &current_arg);
 	return (tokens);
 }
-/*
-
-t_token *tokenize(const char *input)
-{
-    int i = 0;
-    t_token *tokens = NULL;
-    char    *current_arg = NULL;
-
-    while (input[i])
-    {
-        if (is_whitespace(input[i]))
-            process_whitespace(&i, &tokens, &current_arg);
-        else if (is_special(input[i]))
-            process_special(input, &i, &tokens, &current_arg);
-        else if (input[i] == '\'' || input[i] == '"')
-        {
-            // don’t flush here—just stitch into current_arg
-            if (process_quotes(input, &i, &current_arg))
-            {
-                free(current_arg);
-                free_tokens(tokens);
-                return NULL;
-            }
-        }
-        else
-            current_arg = append_char(current_arg, input[i++]);
-    }
-    flush_current_arg(&tokens, &current_arg);
-    return tokens;
-}
-*/

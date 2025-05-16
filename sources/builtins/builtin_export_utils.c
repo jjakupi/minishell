@@ -6,7 +6,7 @@
 /*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:14:02 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 17:35:57 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/16 11:53:28 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ int	cmpfunc(const void *a, const void *b)
 
 	s1 = *(const char **)a;
 	s2 = *(const char **)b;
-	return ((int)strcmp(s1, s2));
+	return ((int)ft_strcmp(s1, s2));
 }
 
 char	**copy_env(char **env)

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_unset.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 13:28:27 by julrusse          #+#    #+#             */
-/*   Updated: 2025/04/24 13:39:14 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/16 11:54:10 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,10 +28,10 @@ int	env_idx(char **env, const char *key)
 	int		key_len;
 
 	i = 0;
-	key_len = (int)strlen(key);
+	key_len = (int)ft_strlen(key);
 	while (env[i])
 	{
-		if (strncmp(env[i], key, key_len) == 0
+		if (ft_strncmp(env[i], key, key_len) == 0
 			&& (env[i][key_len] == '=' || env[i][key_len] == '\0'))
 			return (i);
 		i++;

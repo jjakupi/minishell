@@ -6,7 +6,7 @@
 /*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 15:36:09 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/02 16:08:22 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/16 11:58:59 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,5 +28,5 @@ int	builtin_exit(t_command *cmd)
 		ft_putendl_fd("bash: exit: too many arguments", 2);
 		return (1);
 	}
-	exit((unsigned char)atoi(cmd->args[0]));
+	exit((unsigned char)ft_atoi(cmd->args[0]));
 }
