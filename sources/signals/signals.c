@@ -6,13 +6,11 @@
 /*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/15 17:01:17 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/16 09:50:34 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/16 10:23:25 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
-
-volatile sig_atomic_t	g_last_exit_status;
 
 static void	sigint_handler(int signo)
 {

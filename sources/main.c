@@ -6,7 +6,7 @@
 /*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/15 17:03:03 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/16 09:47:36 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/16 10:23:45 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ static void	shell_loop(t_shell *shell)
 		if (input == NULL)
 		{
 			printf("exit\n");
-			break;
+			break ;
 		}
 		if (g_last_exit_status)
 		{

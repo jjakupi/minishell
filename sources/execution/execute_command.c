@@ -6,32 +6,11 @@
 /*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 13:47:36 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/16 09:48:09 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/16 10:25:35 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
-
-static int	open_and_dup_output(char *file, int append)
-{
-	int		flags;
-	int		fd;
-
-	flags = O_WRONLY | O_CREAT;
-	if (append)
-		flags |= O_APPEND;
-	else
-		flags |= O_TRUNC;
-	fd = open(file, flags, 0644);
-	if (fd < 0)
-	{
-		minishell_perror(file);
-		return (-1);
-	}
-	dup2(fd, STDOUT_FILENO);
-	safe_close(fd);
-	return (0);
-}
 
 static int	apply_output_redirs(t_command *cmd, int *saved_out)
 {

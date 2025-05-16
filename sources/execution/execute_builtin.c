@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execute_builtin.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julrusse <marvin@42lausanne.ch>            +#+  +:+       +#+        */
+/*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 13:43:23 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/03 12:33:52 by julrusse         ###   ########.fr       */
+/*   Updated: 2025/05/16 10:25:51 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,4 +49,25 @@ int	execute_builtin(t_command *cmd, t_shell *shell)
 	else if (!ft_strcmp(cmd->cmd, "unset"))
 		return (builtin_unset(cmd, &shell->envp));
 	return (127);
+}
+
+int	open_and_dup_output(char *file, int append)
+{
+	int		flags;
+	int		fd;
+
+	flags = O_WRONLY | O_CREAT;
+	if (append)
+		flags |= O_APPEND;
+	else
+		flags |= O_TRUNC;
+	fd = open(file, flags, 0644);
+	if (fd < 0)
+	{
+		minishell_perror(file);
+		return (-1);
+	}
+	dup2(fd, STDOUT_FILENO);
+	safe_close(fd);
+	return (0);
 }

@@ -6,7 +6,7 @@
 /*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 13:56:55 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/16 09:51:05 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/16 10:25:21 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -229,6 +229,7 @@ void			wire_pipes(int in_fd, int out_fd);
 void			apply_output_redirects(t_command *cmd);
 void			apply_input_redirects(t_command *cmd);
 void			apply_heredoc(t_command *cmd);
+int				open_and_dup_output(char *file, int append);
 
 /* exec_action.c */
 void			run_builtin_or_exit(t_command *cmd, t_shell *shell);
