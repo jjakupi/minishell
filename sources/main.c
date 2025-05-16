@@ -6,7 +6,7 @@
 /*   By: jjakupi <marvin@42lausanne.ch>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/15 17:03:03 by julrusse          #+#    #+#             */
-/*   Updated: 2025/05/15 19:57:07 by jjakupi          ###   ########.fr       */
+/*   Updated: 2025/05/16 09:47:36 by jjakupi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,30 +29,27 @@ static void	handle_line(t_shell *shell, char *input)
 {
 	t_token		*tokens;
 	t_command	*cmds;
-	int			parse_status;
+	int			status;
 
-	cmds = NULL;
-	if (input[0] != '\0')
+	if (*input)
 		add_history(input);
 	tokens = tokenize(input);
-	parse_status = parse_pipeline(tokens, &cmds);
+	status = parse_pipeline(tokens, &cmds);
 	free_tokens(tokens);
-	if (parse_status == 0 && cmds)
+	if (!status && cmds)
 	{
 		do_expansion(cmds, shell->last_exit, shell->envp);
 		shell->last_exit = execute_command(cmds, shell);
 		free_command(cmds);
+		return ;
+	}
+	if (g_last_exit_status)
+	{
+		shell->last_exit = g_last_exit_status;
+		g_last_exit_status = 0;
 	}
 	else
-	{
-		if (g_last_exit_status)
-		{
-			shell->last_exit = g_last_exit_status;
-			g_last_exit_status = 0;
-		}
-		else
-			shell->last_exit = 2;
-	}
+		shell->last_exit = 2;
 }
 
 static void	shell_loop(t_shell *shell)
